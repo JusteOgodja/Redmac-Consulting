@@ -1,0 +1,39 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de cas d'usage - Admin Plateforme
+left to right direction
+
+actor "Admin Plateforme" as Admin
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase "Se connecter" as UC_Login
+  usecase "Gerer catalogue" as UC_Catalog
+  usecase "Gerer produits" as UC_Products
+  usecase "Gerer fournisseurs" as UC_Suppliers
+  usecase "Gerer marques" as UC_Brands
+  usecase "Gerer categories et taxonomie" as UC_Categories
+  usecase "Importer produits en masse" as UC_BulkImport
+  usecase "Valider EAN et anomalies" as UC_EAN
+  usecase "Moderer avis et contenus" as UC_Content
+  usecase "Gerer campagnes sponsoring" as UC_Sponsoring
+  usecase "Consulter analytics" as UC_Analytics
+  usecase "Gerer CMS editorial" as UC_CMS
+}
+
+Admin --> UC_Login
+Admin --> UC_Catalog
+Admin --> UC_Suppliers
+Admin --> UC_BulkImport
+Admin --> UC_Content
+Admin --> UC_Sponsoring
+Admin --> UC_CMS
+
+UC_Catalog ..> UC_Products : <<include>>
+UC_Catalog ..> UC_Brands : <<include>>
+UC_Catalog ..> UC_Categories : <<include>>
+UC_BulkImport ..> UC_EAN : <<include>>
+UC_Sponsoring ..> UC_Analytics : <<include>>
+
+UC_Content ..> UC_Catalog : <<extend>>
+
+@enduml

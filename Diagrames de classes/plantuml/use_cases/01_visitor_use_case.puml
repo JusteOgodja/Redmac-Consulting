@@ -1,0 +1,28 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de cas d'usage - Visiteur
+left to right direction
+
+actor Visiteur
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase "Consulter catalogue public" as UC1
+  usecase "Rechercher et filtrer produits" as UC2
+  usecase "Consulter fiche produit" as UC3
+  usecase "Voir page fournisseur" as UC4
+  usecase "Voir page marque" as UC5
+  usecase "Comparer produits" as UC6
+  usecase "S'inscrire" as UC7
+}
+
+Visiteur --> UC1
+Visiteur --> UC3
+Visiteur --> UC4
+Visiteur --> UC5
+Visiteur --> UC7
+
+UC2 ..> UC1 : <<extend>>
+UC6 ..> UC3 : <<extend>>
+UC7 ..> UC3 : <<extend>>
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de sequence - Import massif de produits
+autonumber
+
+actor Fournisseur
+participant SupplierBackoffice
+participant ProductController
+participant ProductImportService
+participant CSVParser
+participant ProductValidator
+database ProductRepository
+participant ImportReportService
+
+Fournisseur -> SupplierBackoffice : uploader fichier CSV / Excel
+SupplierBackoffice -> ProductController : importProducts(file)
+ProductController -> ProductImportService : import(file)
+ProductImportService -> ProductImportService : initialiser rapport
+
+loop pour chaque ligne
+  ProductImportService -> CSVParser : readNextLine()
+  CSVParser --> ProductImportService : rawRow
+  ProductImportService -> ProductValidator : validate(rawRow)
+
+  alt ligne valide
+    ProductValidator --> ProductImportService : validatedProductData
+    ProductImportService -> ProductRepository : saveOrUpdate(productData)
+    ProductRepository --> ProductImportService : saved
+  else ligne invalide
+    ProductValidator --> ProductImportService : validationErrors
+    ProductImportService -> ImportReportService : addError(rawRow, validationErrors)
+    ImportReportService --> ProductImportService : errorRecorded
+  end
+end
+
+ProductImportService -> ImportReportService : generateReport()
+ImportReportService --> ProductImportService : importReport
+ProductImportService --> ProductController : importResult(importReport)
+ProductController --> SupplierBackoffice : afficher rapport d'import
+SupplierBackoffice --> Fournisseur : recevoir rapport d'import
+
+@enduml

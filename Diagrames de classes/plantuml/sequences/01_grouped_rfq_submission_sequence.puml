@@ -1,0 +1,53 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de sequence - Acheteur envoie une RFQ groupee a un fournisseur
+autonumber
+
+actor Acheteur
+participant Frontend
+participant RFQController
+participant CreateGroupedRFQUseCase
+database ProductRepository
+database SupplierRepository
+database RFQRepository
+participant NotificationService
+actor Fournisseur
+
+Acheteur -> Frontend : selectionner plusieurs produits favoris
+Acheteur -> Frontend : cliquer sur "Creer RFQ groupee"
+Frontend -> RFQController : createGroupedRFQ(request)
+RFQController -> CreateGroupedRFQUseCase : execute(request)
+CreateGroupedRFQUseCase -> CreateGroupedRFQUseCase : verifier acheteur connecte
+CreateGroupedRFQUseCase -> CreateGroupedRFQUseCase : verifier KYC valide
+
+alt KYC invalide
+  CreateGroupedRFQUseCase --> RFQController : erreur KYC incomplet
+  RFQController --> Frontend : demander finalisation profil
+else KYC valide
+  CreateGroupedRFQUseCase -> ProductRepository : findSelectedProducts(productIds)
+  ProductRepository --> CreateGroupedRFQUseCase : products
+  CreateGroupedRFQUseCase -> SupplierRepository : findById(supplierId)
+  SupplierRepository --> CreateGroupedRFQUseCase : supplier
+  CreateGroupedRFQUseCase -> CreateGroupedRFQUseCase : verifier meme fournisseur destinataire
+  CreateGroupedRFQUseCase -> CreateGroupedRFQUseCase : verifier quantites, MOQ et disponibilite
+
+  alt quantite inferieure au MOQ
+    CreateGroupedRFQUseCase --> RFQController : erreur de validation MOQ
+    RFQController --> Frontend : afficher erreur de validation
+  else demande valide
+    CreateGroupedRFQUseCase -> CreateGroupedRFQUseCase : creer RequestForQuotation
+    loop pour chaque produit selectionne
+      CreateGroupedRFQUseCase -> CreateGroupedRFQUseCase : creer RFQLine
+      CreateGroupedRFQUseCase -> CreateGroupedRFQUseCase : associer Product, quantite, commentaire
+    end
+    CreateGroupedRFQUseCase -> RFQRepository : save(rfq)
+    RFQRepository --> CreateGroupedRFQUseCase : rfqSaved
+    CreateGroupedRFQUseCase -> NotificationService : notifySupplier(rfqSaved)
+    NotificationService -> Fournisseur : nouvelle RFQ recue
+    CreateGroupedRFQUseCase --> RFQController : confirmation(rfqId)
+    RFQController --> Frontend : creation confirmee
+    Frontend --> Acheteur : afficher confirmation RFQ
+  end
+end
+
+@enduml

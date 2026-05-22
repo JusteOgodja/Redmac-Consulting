@@ -1,0 +1,39 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de cas d'usage - Account Manager
+left to right direction
+
+actor "Account Manager" as AM
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase "Se connecter" as UC_Login
+  usecase "Suivre comptes fournisseurs" as UC_Suppliers
+  usecase "Suivre comptes acheteurs" as UC_Buyers
+  usecase "Valider fournisseurs" as UC_ValidateSupplier
+  usecase "Valider documents legaux" as UC_ValidateDocs
+  usecase "Qualifier leads" as UC_Qualify
+  usecase "Suivre opportunites commerciales" as UC_Opportunities
+  usecase "Accompagner fournisseurs" as UC_SupportSuppliers
+  usecase "Accompagner acheteurs" as UC_SupportBuyers
+  usecase "Consulter statistiques globales" as UC_Analytics
+  usecase "Consulter historique RFQ" as UC_RFQHistory
+  usecase "Signaler anomalies" as UC_Flag
+}
+
+AM --> UC_Login
+AM --> UC_Suppliers
+AM --> UC_Buyers
+AM --> UC_ValidateSupplier
+AM --> UC_Qualify
+AM --> UC_Opportunities
+AM --> UC_Analytics
+
+UC_ValidateSupplier ..> UC_ValidateDocs : <<include>>
+UC_Qualify ..> UC_RFQHistory : <<include>>
+UC_Opportunities ..> UC_Qualify : <<include>>
+
+UC_SupportSuppliers ..> UC_Suppliers : <<extend>>
+UC_SupportBuyers ..> UC_Buyers : <<extend>>
+UC_Flag ..> UC_Analytics : <<extend>>
+
+@enduml

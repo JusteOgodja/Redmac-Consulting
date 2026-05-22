@@ -1,0 +1,33 @@
+skinparam monochrome false
+skinparam shadowing false
+skinparam dpi 160
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 13
+skinparam ArrowColor #4C5B61
+skinparam BackgroundColor #FFFFFF
+skinparam roundcorner 10
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+skinparam TitleFontColor #17313B
+skinparam TitleFontSize 18
+
+skinparam ClassAttributeIconSize 0
+skinparam ClassBorderColor #335C67
+skinparam ClassBackgroundColor #FCFEFE
+skinparam ClassHeaderBackgroundColor #E6F2F3
+
+skinparam ActorBorderColor #335C67
+skinparam ActorBackgroundColor #F5FBFB
+skinparam UsecaseBorderColor #335C67
+skinparam UsecaseBackgroundColor #FCFEFE
+
+skinparam SequenceLifeLineBorderColor #335C67
+skinparam SequenceLifeLineBackgroundColor #F5FBFB
+skinparam ParticipantBorderColor #335C67
+skinparam ParticipantBackgroundColor #FCFEFE
+
+skinparam NoteBackgroundColor #FFF8E8
+skinparam NoteBorderColor #D8BE74
+skinparam LegendBorderColor #9CB7BE
+skinparam LegendBackgroundColor #F8FCFC

@@ -1,0 +1,87 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de classes - Identite et roles
+top to bottom direction
+hide empty members
+
+abstract class User {
+  - id: UUID
+  - firstName: string
+  - lastName: string
+  - email: string
+  - passwordHash: string
+  - phone: string
+  - status: UserStatus
+  - languagePreference: string
+  - currencyPreference: string
+  - timezone: string
+  - createdAt: datetime
+  - updatedAt: datetime
+  + authenticate(): boolean
+  + updateProfile(): void
+}
+
+class BuyerUser {
+  - companyName: string
+  - country: string
+  - businessSector: string
+  - kycStatus: KYCStatus
+  + submitKYC(): void
+  + createRFQ(): RequestForQuotation
+}
+
+class SupplierUser {
+  - position: string
+  - department: string
+  + manageProducts(): void
+  + respondToRFQ(): void
+}
+
+class AccountManager {
+  - employeeCode: string
+  - territory: string
+  + validateSupplier(): void
+  + followOpportunities(): void
+}
+
+class PlatformAdmin {
+  - adminLevel: string
+  + moderateContent(): void
+  + manageSponsorships(): void
+}
+
+class SuperAdmin {
+  + manageRoles(): void
+  + configureSystem(): void
+  + auditPlatform(): void
+}
+
+class SupplierCompany {
+  - id: UUID
+  - companyName: string
+  - validationStatus: SupplierValidationStatus
+}
+
+class RequestForQuotation
+
+User <|-- BuyerUser
+User <|-- SupplierUser
+User <|-- AccountManager
+User <|-- PlatformAdmin
+PlatformAdmin <|-- SuperAdmin
+
+SupplierCompany "1" -- "1..*" SupplierUser : hasUsers
+BuyerUser "1" -- "0..*" RequestForQuotation : creates
+AccountManager "1" -- "0..*" SupplierCompany : monitors
+
+note right of SupplierCompany
+  La societe fournisseur est une entite
+  metier distincte du compte utilisateur.
+end note
+
+note bottom of User
+  Le Visiteur n'est pas une classe persistante.
+  Il reste un acteur non authentifie des cas d'usage.
+end note
+
+@enduml

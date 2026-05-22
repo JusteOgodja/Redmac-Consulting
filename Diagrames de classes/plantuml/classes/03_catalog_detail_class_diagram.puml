@@ -1,0 +1,75 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de classes - Detail catalogue produit
+left to right direction
+hide empty members
+
+class Product {
+  - id: UUID
+  - name: LocalizedText
+  - description: LocalizedText
+  - ean: string
+  - hsCode: string
+  - minimumOrderQuantity: int
+  - packagingUnitsPerCarton: int
+  - stockTotal: int
+}
+
+class SupplierCompany {
+  - id: UUID
+  - companyName: string
+}
+
+class Media {
+  - id: UUID
+  - url: string
+  - type: MediaType
+  - altText: string
+}
+
+class LocalizedText {
+  - fr: string
+  - en: string
+  - ar: string
+}
+
+class Dimensions {
+  - length: decimal
+  - width: decimal
+  - height: decimal
+  - grossWeight: decimal
+  - netWeight: decimal
+  - volume: decimal
+}
+
+class Palletization {
+  - cartonsPerLayer: int
+  - layersPerPallet: int
+  - cartonsPerPallet: int
+}
+
+class Certification {
+  - id: UUID
+  - name: string
+  - issuer: string
+  - expirationDate: date?
+}
+
+class ProductComplianceInfo {
+  - ingredientsText: LocalizedText
+  - nutritionText: LocalizedText
+  - allergens: List<string>
+  - diets: List<string>
+  - exportAuthorizedCountries: List<string>
+}
+
+Product "1" *-- "0..*" Media : photos / videos
+Product "1" *-- "1" Dimensions : unitDimensions
+Product "1" *-- "1" Dimensions : cartonDimensions
+Product "1" *-- "0..1" Dimensions : palletDimensions
+Product "1" *-- "0..1" Palletization
+Product "1" *-- "0..1" ProductComplianceInfo
+Product "0..*" -- "0..*" Certification
+SupplierCompany "0..*" -- "0..*" Certification
+
+@enduml

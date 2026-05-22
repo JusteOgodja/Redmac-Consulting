@@ -1,0 +1,49 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de cas d'usage - Client B2B / Acheteur
+left to right direction
+
+actor "Client B2B / Acheteur" as Buyer
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase "Se connecter" as UC_Login
+  usecase "Gerer profil et KYC" as UC_KYC
+  usecase "Consulter catalogue" as UC_Catalog
+  usecase "Rechercher et filtrer produits" as UC_Search
+  usecase "Consulter fiche produit" as UC_Product
+  usecase "Ajouter aux favoris" as UC_Favorite
+  usecase "Comparer produits" as UC_Compare
+  usecase "Creer RFQ groupee" as UC_RFQ
+  usecase "Demander echantillon" as UC_Sample
+  usecase "Consulter historique RFQ" as UC_History
+  usecase "Consulter devis recu" as UC_Quote
+  usecase "Envoyer message" as UC_Message
+  usecase "Negocier devis" as UC_Negotiate
+  usecase "Accepter devis" as UC_Accept
+  usecase "Refuser devis" as UC_Reject
+  usecase "Laisser avis" as UC_Review
+}
+
+Buyer --> UC_Catalog
+Buyer --> UC_Search
+Buyer --> UC_Product
+Buyer --> UC_RFQ
+Buyer --> UC_Sample
+Buyer --> UC_History
+Buyer --> UC_Quote
+
+UC_RFQ ..> UC_Login : <<include>>
+UC_RFQ ..> UC_Favorite : <<include>>
+UC_RFQ ..> UC_KYC : <<include>>
+UC_Sample ..> UC_Login : <<include>>
+UC_Quote ..> UC_Login : <<include>>
+
+UC_Favorite ..> UC_Product : <<extend>>
+UC_Compare ..> UC_Product : <<extend>>
+UC_Message ..> UC_Quote : <<extend>>
+UC_Negotiate ..> UC_Quote : <<extend>>
+UC_Accept ..> UC_Quote : <<extend>>
+UC_Reject ..> UC_Quote : <<extend>>
+UC_Review ..> UC_Product : <<extend>>
+
+@enduml

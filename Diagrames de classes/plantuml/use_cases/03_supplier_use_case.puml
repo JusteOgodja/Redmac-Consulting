@@ -1,0 +1,44 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de cas d'usage - Fournisseur
+left to right direction
+
+actor Fournisseur
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase "S'inscrire fournisseur" as UC_Register
+  usecase "Se connecter" as UC_Login
+  usecase "Completer fiche societe" as UC_Profile
+  usecase "Soumettre documents legaux" as UC_LegalDocs
+  usecase "Gerer produits" as UC_ManageProducts
+  usecase "Creer produit" as UC_CreateProduct
+  usecase "Modifier produit" as UC_UpdateProduct
+  usecase "Importer produits en masse" as UC_BulkImport
+  usecase "Mettre a jour stocks" as UC_Stocks
+  usecase "Gerer grilles tarifaires" as UC_Pricing
+  usecase "Consulter RFQ recues" as UC_ViewRFQ
+  usecase "Repondre RFQ" as UC_ReplyRFQ
+  usecase "Envoyer message" as UC_Message
+  usecase "Consulter statistiques fournisseur" as UC_Stats
+  usecase "Acheter sponsoring" as UC_Sponsoring
+}
+
+Fournisseur --> UC_Register
+Fournisseur --> UC_Profile
+Fournisseur --> UC_ManageProducts
+Fournisseur --> UC_ViewRFQ
+Fournisseur --> UC_Stats
+
+UC_Register ..> UC_LegalDocs : <<include>>
+UC_ManageProducts ..> UC_Login : <<include>>
+UC_CreateProduct ..> UC_ManageProducts : <<include>>
+UC_UpdateProduct ..> UC_ManageProducts : <<include>>
+UC_BulkImport ..> UC_ManageProducts : <<include>>
+UC_Stocks ..> UC_ManageProducts : <<include>>
+UC_Pricing ..> UC_ManageProducts : <<include>>
+UC_ReplyRFQ ..> UC_ViewRFQ : <<include>>
+
+UC_Message ..> UC_ReplyRFQ : <<extend>>
+UC_Sponsoring ..> UC_Stats : <<extend>>
+
+@enduml

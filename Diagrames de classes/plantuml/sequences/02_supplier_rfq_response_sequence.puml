@@ -1,0 +1,47 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de sequence - Reponse fournisseur a une RFQ
+autonumber
+
+actor Fournisseur
+participant SupplierBackoffice
+participant RFQController
+participant RFQService
+database RFQRepository
+participant ConversationService
+participant NotificationService
+actor Acheteur
+
+Fournisseur -> SupplierBackoffice : ouvrir RFQ recue
+SupplierBackoffice -> RFQController : getRFQDetails(rfqId)
+RFQController -> RFQService : loadRFQ(rfqId)
+RFQService -> RFQRepository : findWithLines(rfqId)
+RFQRepository --> RFQService : rfq + lines
+RFQService --> RFQController : details RFQ
+RFQController --> SupplierBackoffice : afficher details
+
+Fournisseur -> SupplierBackoffice : saisir prix, delai, commentaire, piece jointe
+SupplierBackoffice -> RFQController : respondToRFQ(responseDto)
+RFQController -> RFQService : respondToRFQ(responseDto)
+
+alt demande incomplete
+  RFQService -> ConversationService : addMessage(rfqId, demandeDePrecisions)
+  ConversationService --> RFQService : messageCree
+  RFQService -> NotificationService : notifyBuyerClarificationNeeded(rfqId)
+  NotificationService -> Acheteur : demande de precisions recue
+  RFQService --> RFQController : responsePending
+  RFQController --> SupplierBackoffice : confirmation demande de precisions
+else devis envoye
+  RFQService -> RFQRepository : saveSupplierResponse(responseDto)
+  RFQRepository --> RFQService : responseSaved
+  RFQService -> ConversationService : addMessage(rfqId, devisEtCommentaire)
+  ConversationService --> RFQService : messageCree
+  RFQService -> RFQRepository : updateStatus(rfqId, "devis envoye")
+  RFQRepository --> RFQService : statusUpdated
+  RFQService -> NotificationService : notifyBuyerQuoteReceived(rfqId)
+  NotificationService -> Acheteur : devis recu
+  RFQService --> RFQController : responseConfirmed
+  RFQController --> SupplierBackoffice : afficher confirmation
+end
+
+@enduml

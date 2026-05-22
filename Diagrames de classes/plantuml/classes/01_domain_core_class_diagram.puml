@@ -1,0 +1,200 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de classes - Noyau metier B2B FMCG Export
+top to bottom direction
+hide empty members
+
+package "Catalogue" {
+  class SupplierCompany {
+    - id: UUID
+    - companyName: string
+    - country: string
+    - address: Address
+    - tradeRegisterNumber: string
+    - website: string
+    - logo: Media
+    - description: LocalizedText
+    - validationStatus: SupplierValidationStatus
+    - qualityScore: decimal
+    - registrationDate: datetime
+    + isValidated(): boolean
+  }
+
+  class Product {
+    - id: UUID
+    - name: LocalizedText
+    - slug: string
+    - ean: string
+    - hsCode: string
+    - minimumOrderQuantity: int
+    - referenceCurrency: string
+    - stockTotal: int
+    - shelfLifeDays: int
+    - countryOfOrigin: string
+    - status: ProductStatus
+    - isNew: boolean
+    - isPromoted: boolean
+    - isSponsored: boolean
+    - averageRating: decimal
+    - reviewCount: int
+    + getPriceFor(quantity: int): decimal
+    + getAvailableLots(): List<Lot>
+    + getUrgentDLCLots(daysMax: int): List<Lot>
+    + isOutOfStock(): boolean
+    + isPubliclyVisible(): boolean
+  }
+
+  class Brand {
+    - id: UUID
+    - name: string
+    - logo: Media
+    - countryOfOrigin: string
+    - storytelling: LocalizedText
+  }
+
+  class Category {
+    - id: UUID
+    - name: LocalizedText
+    - slug: string
+    - group: CategoryGroup
+    - level: int
+    - icon: Media
+  }
+
+  class Lot {
+    - id: UUID
+    - lotNumber: string
+    - productionDate: date
+    - expirationDate: date
+    - quantity: int
+    - warehouse: string
+    - status: LotStatus
+  }
+
+  class PriceTier {
+    - id: UUID
+    - minimumQuantity: int
+    - maximumQuantity: int?
+    - unitPrice: decimal
+    - currency: string
+    - incoterm: string
+  }
+
+  class SponsorshipCampaign {
+    - id: UUID
+    - placement: SponsorshipPlacement
+    - startDate: date
+    - endDate: date
+    - impressions: int
+    - clicks: int
+    - status: SponsorshipStatus
+  }
+}
+
+package "Commerce et relation" {
+  class RequestForQuotation {
+    - id: UUID
+    - incoterm: string
+    - destinationPort: string
+    - currency: string
+    - expectedDeliveryTime: string
+    - frequency: RFQFrequency
+    - comment: string
+    - status: RFQStatus
+    - createdAt: datetime
+    + calculateTotal(): decimal
+    + changeStatus(newStatus: RFQStatus): void
+  }
+
+  class RFQLine {
+    - id: UUID
+    - requestedQuantity: int
+    - proposedPrice: decimal?
+    - comment: string
+  }
+
+  class Conversation {
+    - id: UUID
+    - subject: string
+    - createdAt: datetime
+    - status: ConversationStatus
+  }
+
+  class Message {
+    - id: UUID
+    - content: string
+    - attachments: List<Media>
+    - read: boolean
+    - createdAt: datetime
+  }
+
+  class Review {
+    - id: UUID
+    - rating: int
+    - comment: string
+    - moderationStatus: ReviewModerationStatus
+    - createdAt: datetime
+  }
+}
+
+package "Validation fournisseur" {
+  class SupplierValidationFile {
+    - id: UUID
+    - submittedAt: datetime
+    - validatedAt: datetime?
+    - status: SupplierValidationStatus
+    - comment: string
+  }
+
+  class LegalDocument {
+    - id: UUID
+    - type: LegalDocumentType
+    - file: Media
+    - status: DocumentStatus
+    - uploadedAt: datetime
+  }
+}
+
+package "Acteurs relies" {
+  abstract class User
+  class BuyerUser
+  class SupplierUser
+  class Address <<Value Object>>
+  class Media <<Value Object>>
+  class LocalizedText <<Value Object>>
+}
+
+SupplierCompany "1" -- "0..*" Product : proposes
+SupplierCompany "1" -- "1..*" SupplierUser : hasUsers
+SupplierCompany "1" -- "1" SupplierValidationFile : validationFile
+SupplierValidationFile "1" *-- "1..*" LegalDocument : documents
+
+SupplierCompany "0..*" -- "0..*" Brand : owns / distributes
+Brand "1" -- "0..*" Product : groups
+Category "1" -- "0..*" Product : mainCategory
+Category "0..1" -- "0..*" Category : parent / children
+
+Product "1" *-- "0..*" Lot : lots
+Product "1" *-- "0..*" PriceTier : priceTiers
+Product "1" -- "0..*" Review : reviews
+Product "1" -- "0..*" SponsorshipCampaign : campaigns
+
+BuyerUser "1" -- "0..*" RequestForQuotation : creates
+SupplierCompany "1" -- "0..*" RequestForQuotation : receives
+RequestForQuotation "1" *-- "1..*" RFQLine : lines
+RFQLine "0..*" -- "1" Product : product
+
+RequestForQuotation "1" -- "0..1" Conversation : discussion
+Conversation "1" *-- "0..*" Message : messages
+User "1" -- "0..*" Message : sends
+User "1" -- "0..*" Review : writes
+
+legend right
+  |= Notation |= Sens |
+  | `<|--` | Heritage |
+  | `--` | Association |
+  | `*--` | Composition |
+  | `1`, `0..*`, `1..*` | Cardinalites |
+endlegend
+
+@enduml

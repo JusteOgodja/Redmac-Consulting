@@ -1,0 +1,31 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de cas d'usage - Super Admin
+left to right direction
+
+actor "Super Admin" as SuperAdmin
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase "Se connecter avec MFA" as UC_MFA
+  usecase "Gerer utilisateurs" as UC_Users
+  usecase "Gerer roles et permissions" as UC_Roles
+  usecase "Configurer systeme" as UC_System
+  usecase "Consulter audit trail" as UC_Audit
+  usecase "Gerer securite" as UC_Security
+  usecase "Gerer sauvegardes" as UC_Backup
+  usecase "Superviser integrations externes" as UC_Integrations
+  usecase "Administrer plateforme" as UC_Administer
+}
+
+SuperAdmin --> UC_Administer
+SuperAdmin --> UC_Users
+SuperAdmin --> UC_System
+SuperAdmin --> UC_Security
+SuperAdmin --> UC_Backup
+
+UC_Administer ..> UC_MFA : <<include>>
+UC_Users ..> UC_Roles : <<include>>
+UC_Security ..> UC_Audit : <<include>>
+UC_System ..> UC_Integrations : <<include>>
+
+@enduml

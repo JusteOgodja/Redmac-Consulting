@@ -1,0 +1,39 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de sequence - Validation fournisseur
+autonumber
+
+actor AccountManager
+participant AdminBackoffice
+participant SupplierValidationController
+participant SupplierValidationService
+participant DocumentService
+database SupplierRepository
+participant NotificationService
+actor Fournisseur
+
+AccountManager -> AdminBackoffice : ouvrir fournisseur en attente
+AdminBackoffice -> SupplierValidationController : reviewSupplier(supplierId)
+SupplierValidationController -> SupplierValidationService : loadValidationFile(supplierId)
+SupplierValidationService -> SupplierRepository : findValidationFile(supplierId)
+SupplierRepository --> SupplierValidationService : validation file
+SupplierValidationService -> DocumentService : verifyDocuments(validationFile)
+DocumentService --> SupplierValidationService : verificationResult
+
+alt documents valides
+  SupplierValidationService -> SupplierRepository : updateValidationStatus(supplierId, VALIDATED)
+  SupplierRepository --> SupplierValidationService : supplier updated
+  SupplierValidationService -> NotificationService : notifySupplierValidated(supplierId)
+  NotificationService -> Fournisseur : fournisseur valide
+  SupplierValidationService --> SupplierValidationController : validation success
+  SupplierValidationController --> AdminBackoffice : afficher resultat valide
+else documents manquants ou rejetes
+  SupplierValidationService -> SupplierRepository : updateValidationStatus(supplierId, REJECTED)
+  SupplierRepository --> SupplierValidationService : supplier updated
+  SupplierValidationService -> NotificationService : notifySupplierRejected(supplierId, reasons)
+  NotificationService -> Fournisseur : documents a completer
+  SupplierValidationService --> SupplierValidationController : validation rejected
+  SupplierValidationController --> AdminBackoffice : afficher resultat rejete
+end
+
+@enduml

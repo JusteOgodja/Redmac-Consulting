@@ -1,0 +1,122 @@
+@startuml
+!include ../common/style.puml
+title Diagramme de classes - Architecture MVC, services et repositories
+left to right direction
+hide empty members
+
+package "Web Layer" {
+  class CatalogPage
+  class ProductPage
+  class RFQPage
+  class SupplierDashboardPage
+  class AdminDashboardPage
+}
+
+package "Controller Layer" {
+  class CatalogController
+  class ProductController
+  class RFQController
+  class SupplierController
+  class MessageController
+  class AdminController
+}
+
+package "Application Service Layer" {
+  class CatalogService
+  class ProductService
+  class RFQService
+  class SupplierValidationService
+  class MessagingService
+  class NotificationService
+  class SponsorshipService
+  class ProductImportService
+}
+
+package "Domain Model" {
+  class Product
+  class SupplierCompany
+  class RequestForQuotation
+  class Conversation
+  class SponsorshipCampaign
+}
+
+package "Repository Layer" {
+  interface ProductRepository
+  interface SupplierRepository
+  interface RFQRepository
+  interface MessageRepository
+  interface UserRepository
+  interface SponsorshipRepository
+}
+
+package "Infrastructure" {
+  class SqlProductRepository
+  class SqlSupplierRepository
+  class SqlRFQRepository
+  class SqlMessageRepository
+  class SqlUserRepository
+  class SqlSponsorshipRepository
+  class CSVParser
+  class MailNotificationGateway
+}
+
+CatalogPage --> CatalogController
+ProductPage --> ProductController
+RFQPage --> RFQController
+SupplierDashboardPage --> SupplierController
+AdminDashboardPage --> AdminController
+
+CatalogController --> CatalogService
+ProductController --> ProductService
+ProductController --> ProductImportService
+RFQController --> RFQService
+SupplierController --> SupplierValidationService
+SupplierController --> MessagingService
+MessageController --> MessagingService
+AdminController --> SponsorshipService
+AdminController --> SupplierValidationService
+
+CatalogService --> ProductRepository
+ProductService --> ProductRepository
+RFQService --> RFQRepository
+RFQService --> ProductRepository
+RFQService --> SupplierRepository
+RFQService --> NotificationService
+SupplierValidationService --> SupplierRepository
+MessagingService --> MessageRepository
+MessagingService --> RFQRepository
+SponsorshipService --> SponsorshipRepository
+ProductImportService --> ProductRepository
+ProductImportService --> CSVParser
+
+ProductRepository ..> Product
+SupplierRepository ..> SupplierCompany
+RFQRepository ..> RequestForQuotation
+MessageRepository ..> Conversation
+SponsorshipRepository ..> SponsorshipCampaign
+
+SqlProductRepository ..|> ProductRepository
+SqlSupplierRepository ..|> SupplierRepository
+SqlRFQRepository ..|> RFQRepository
+SqlMessageRepository ..|> MessageRepository
+SqlUserRepository ..|> UserRepository
+SqlSponsorshipRepository ..|> SponsorshipRepository
+
+NotificationService --> MailNotificationGateway
+
+note left of CatalogController
+  Les controllers orchestrent l'I/O
+  et ne portent pas la logique metier.
+end note
+
+note bottom of ProductRepository
+  Dependency Inversion :
+  les services dependent d'interfaces.
+end note
+
+note right of ProductImportService
+  La logique d'import massif
+  reste dans un service dedie.
+end note
+
+@enduml
