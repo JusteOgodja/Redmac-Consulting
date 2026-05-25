@@ -1,0 +1,88 @@
+@startuml
+!include ../common/style.puml
+
+actor Fournisseur as supplier #4ECDC4
+
+participant "SupplierBackoffice" as Back #EDF2F7
+participant "ProductController" as Ctrl #B3D4FF
+participant "ProductImportService" as ImportSvc #B2F5EA
+participant "ImportTemplateGenerator" as Template #FBD38D
+participant "CSVParser" as Parser #E2E8F0
+participant "ProductConfigurationService" as ConfigSvc #81E6D9
+participant "ProductValidator" as Validator #FBD38D
+database "ProductRepository" as Repo #81E6D9
+participant "ProductMediaService" as MediaSvc #B2F5EA
+participant "ImportReportService" as Report #FBD38D
+
+title Diagramme de sequence - Import massif de produits avec configuration categorie
+autonumber
+
+supplier -> Back : demander template d'import pour une categorie
+Back -> Ctrl : getImportTemplate(categoryId)
+Ctrl -> ImportSvc : generateTemplate(categoryId)
+ImportSvc -> ConfigSvc : getRequiredAttributes(categoryId)
+ConfigSvc --> ImportSvc : categoryAttributes
+ImportSvc -> Template : generateExcel(category, attributes)
+Template --> ImportSvc : templateFile
+ImportSvc --> Ctrl : importTemplate
+Ctrl --> Back : telecharger template
+Back --> supplier : fichier template recu
+
+supplier -> Back : remplir et uploader fichier
+Back -> Ctrl : importProducts(file, categoryId)
+Ctrl -> ImportSvc : import(file, categoryId)
+ImportSvc -> ImportSvc : initialiser rapport
+ImportSvc -> ConfigSvc : getRequiredAttributes(categoryId)
+ConfigSvc --> ImportSvc : categoryAttributes
+
+loop pour chaque ligne du fichier
+  ImportSvc -> Parser : readNextLine()
+  Parser --> ImportSvc : rawRow
+
+  alt categorie inconnue
+    ImportSvc -> Report : addError(rawRow, "categorie inconnue")
+  else ligne presente
+    ImportSvc -> Validator : validateCommonFields(rawRow)
+    Validator --> ImportSvc : commonValidated
+
+    alt champs communs invalides
+      ImportSvc -> Report : addError(rawRow, commonErrors)
+    else champs communs valides
+      ImportSvc -> Validator : validateFoodFields(rawRow)
+      Validator --> ImportSvc : foodValidated
+
+      alt champs Food invalides
+        ImportSvc -> Report : addError(rawRow, foodErrors)
+      else champs Food valides
+        ImportSvc -> Validator : validateFamilySpecificFields(rawRow, categoryAttributes)
+        Validator --> ImportSvc : familyValidated
+
+        alt champs famille invalides
+          ImportSvc -> Report : addError(rawRow, familyErrors)
+        else champs famille valides
+          alt images fournies
+            ImportSvc -> MediaSvc : processImages(rawRow.images)
+            MediaSvc --> ImportSvc : imagesProcessed
+          end
+          ImportSvc -> Repo : save(productData)
+          Repo --> ImportSvc : saved
+          ImportSvc -> Report : addSuccess(rawRow)
+        end
+      end
+    end
+  end
+end
+
+ImportSvc -> Report : generateReport()
+Report --> ImportSvc : importReport
+ImportSvc --> Ctrl : importResult(importReport)
+Ctrl --> Back : afficher rapport d'import
+Back --> supplier : recevoir rapport d'import (succes + erreurs)
+
+note right of ImportSvc
+  L'import depend de la **categorie** :
+  les colonnes attendues different
+  selon la famille de produits.
+end note
+
+@enduml

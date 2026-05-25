@@ -1,0 +1,49 @@
+@startuml
+!include ../common/style.puml
+
+actor Fournisseur as supplier #4ECDC4
+actor Acheteur as buyer #FF6B6B
+
+participant "SupplierBackoffice" as Back #EDF2F7
+participant "RFQController" as Ctrl #B3D4FF
+participant "RFQService" as Svc #B2F5EA
+database "RFQRepository" as RFQRepo #81E6D9
+participant "ConversationService" as Conv #FBD38D
+participant "NotificationService" as Notif #FBD38D
+
+title Diagramme de sequence - Reponse fournisseur a une RFQ
+autonumber
+
+supplier -> Back : ouvrir RFQ recue
+Back -> Ctrl : getRFQDetails(rfqId)
+Ctrl -> Svc : loadRFQ(rfqId)
+Svc -> RFQRepo : findWithLines(rfqId)
+RFQRepo --> Svc : rfq + lines
+Svc --> Ctrl : details RFQ
+Ctrl --> Back : afficher details
+
+supplier -> Back : saisir prix, delai, commentaire, piece jointe
+Back -> Ctrl : respondToRFQ(responseDto)
+Ctrl -> Svc : respondToRFQ(responseDto)
+
+alt demande incomplete
+  Svc -> Conv : addMessage(rfqId, demandeDePrecisions)
+  Conv --> Svc : messageCree
+  Svc -> Notif : notifyBuyerClarificationNeeded(rfqId)
+  Notif -> buyer : demande de precisions recue
+  Svc --> Ctrl : responsePending
+  Ctrl --> Back : confirmation demande de precisions
+else devis envoye
+  Svc -> RFQRepo : saveSupplierResponse(responseDto)
+  RFQRepo --> Svc : responseSaved
+  Svc -> Conv : addMessage(rfqId, devisEtCommentaire)
+  Conv --> Svc : messageCree
+  Svc -> RFQRepo : updateStatus(rfqId, "devis envoye")
+  RFQRepo --> Svc : statusUpdated
+  Svc -> Notif : notifyBuyerQuoteReceived(rfqId)
+  Notif -> buyer : devis recu
+  Svc --> Ctrl : responseConfirmed
+  Ctrl --> Back : afficher confirmation
+end
+
+@enduml

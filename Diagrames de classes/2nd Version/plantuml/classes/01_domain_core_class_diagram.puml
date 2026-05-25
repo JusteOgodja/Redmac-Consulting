@@ -1,0 +1,373 @@
+@startuml
+!include ../common/style.puml
+
+skinparam package<<Catalog>> {
+  BackgroundColor #EBF8FF
+  HeaderBackgroundColor #BEE3F8
+  BorderColor #90CDF4
+}
+
+skinparam package<<Commerce>> {
+  BackgroundColor #F0FFF4
+  HeaderBackgroundColor #C6F6D5
+  BorderColor #9AE6B4
+}
+
+skinparam package<<Validation>> {
+  BackgroundColor #FFFAF0
+  HeaderBackgroundColor #FEEBC8
+  BorderColor #FBD38D
+}
+
+title Diagramme de classes - Noyau metier B2B FMCG Export
+top to bottom direction
+hide empty members
+
+package "Catalogue" <<Catalog>> {
+  class SupplierCompany {
+    - id: UUID
+    - companyName: string
+    - country: string
+    - address: Address
+    - tradeRegisterNumber: string
+    - website: string
+    - logo: Media
+    - description: LocalizedText
+    - validationStatus: SupplierValidationStatus
+    - qualityScore: decimal
+    - registrationDate: datetime
+    + isValidated(): boolean
+  }
+
+  abstract class Product {
+    - id: UUID
+    - sku: string
+    - gtin: string
+    - ean13: string
+    - hsCode: string
+    - name: LocalizedText
+    - slug: string
+    - brand: Brand
+    - supplier: SupplierCompany
+    - mainCategory: Category
+    - description: LocalizedText
+    - countryOfOrigin: string
+    - exportAllowedCountries: List<string>
+    - productStatus: ProductStatus
+    - visibilityStatus: VisibilityStatus
+    - minimumOrderQuantity: int
+    - salesUnit: string
+    - packagingUnit: string
+    - stockTotal: int
+    - referenceCurrency: string
+    - isNew: boolean
+    - isPromoted: boolean
+    - isSponsored: boolean
+    - averageRating: decimal
+    - reviewCount: int
+    - createdAt: datetime
+    - updatedAt: datetime
+    + getPriceFor(quantity: int): decimal
+    + getAvailableStock(): int
+    + getAvailableLots(): List<Lot>
+    + isOutOfStock(): boolean
+    + isPubliclyVisible(): boolean
+    + validateBeforePublication(): ValidationResult
+    + hasValidIdentifier(): boolean
+    + getPrimaryImage(): Media
+    + getExportInfo(country: string): ExportCompliance
+  }
+
+  class FoodProduct {
+    - ingredients: LocalizedText
+    - allergens: List<string>
+    - nutritionFacts: NutritionFacts
+    - storageCondition: StorageCondition
+    - conservationType: ConservationType
+    - shelfLifeDays: int
+    - durabilityType: DurabilityType
+    - bestBeforeDate: date
+    - useByDate: date
+    - temperatureMin: decimal
+    - temperatureMax: decimal
+    - coldChainRequired: boolean
+    - originStatement: LocalizedText
+    - dietaryClaims: List<string>
+    - foodCertifications: List<Certification>
+    - traceabilityRequired: boolean
+    + isPerishable(): boolean
+    + requiresColdChain(): boolean
+    + getDLCStatus(referenceDate: date): string
+    + getUrgentLots(daysThreshold: int): List<Lot>
+    + containsAllergen(allergen: string): boolean
+    + validateFoodCompliance(): ValidationResult
+  }
+
+  class NonFoodProduct {
+    - materialComposition: LocalizedText
+    - usageInstructions: LocalizedText
+    - safetyWarnings: LocalizedText
+    - recyclable: boolean
+    - ecoLabel: string
+    - storageInstructions: LocalizedText
+    - targetUse: string
+    + requiresSpecialHandling(): boolean
+    + isEcoFriendly(): boolean
+    + validateNonFoodCompliance(): ValidationResult
+  }
+
+  class Brand {
+    - id: UUID
+    - name: string
+    - logo: Media
+    - countryOfOrigin: string
+    - storytelling: LocalizedText
+  }
+
+  class Category {
+    - id: UUID
+    - name: LocalizedText
+    - slug: string
+    - group: CategoryGroup
+    - level: int
+    - icon: Media
+  }
+
+  class Lot {
+    - id: UUID
+    - lotNumber: string
+    - productionDate: date
+    - expirationDate: date
+    - quantity: int
+    - warehouse: string
+    - status: LotStatus
+  }
+
+  class PriceTier {
+    - id: UUID
+    - minimumQuantity: int
+    - maximumQuantity: int?
+    - unitPrice: decimal
+    - currency: string
+    - incoterm: string
+  }
+
+  class SponsorshipCampaign {
+    - id: UUID
+    - placement: SponsorshipPlacement
+    - startDate: date
+    - endDate: date
+    - impressions: int
+    - clicks: int
+    - status: SponsorshipStatus
+  }
+
+  class Certification {
+    - id: UUID
+    - name: string
+    - issuer: string
+    - expirationDate: date?
+  }
+
+  class Dimensions {
+    - length: decimal
+    - width: decimal
+    - height: decimal
+    - grossWeight: decimal
+    - netWeight: decimal
+    - volume: decimal
+  }
+
+  class Media <<Value Object>> {
+    - id: UUID
+    - url: string
+    - type: MediaType
+    - altText: string
+  }
+
+  class LocalizedText <<Value Object>> {
+    - fr: string
+    - en: string
+    - ar: string
+  }
+
+  class Address <<Value Object>> {
+    - street: string
+    - city: string
+    - country: string
+    - postalCode: string
+  }
+
+  class ExportCompliance {
+    - hsCode: string
+    - countryOfOrigin: string
+    - exportAllowedCountries: List<string>
+    - requiredCertificates: List<Certification>
+    - incotermsAvailable: List<string>
+    - customsNotes: LocalizedText
+  }
+}
+
+package "Commerce et relation" <<Commerce>> {
+  class RequestForQuotation {
+    - id: UUID
+    - incoterm: string
+    - destinationPort: string
+    - currency: string
+    - expectedDeliveryTime: string
+    - frequency: RFQFrequency
+    - comment: string
+    - status: RFQStatus
+    - createdAt: datetime
+    + calculateTotal(): decimal
+    + changeStatus(newStatus: RFQStatus): void
+  }
+
+  class RFQLine {
+    - id: UUID
+    - productSnapshot: ProductSnapshot
+    - requestedQuantity: int
+    - proposedPrice: decimal?
+    - packaging: ProductPackaging
+    - categoryFamily: string
+    - coldChainRequired: boolean
+    - comment: string
+  }
+
+  class Conversation {
+    - id: UUID
+    - subject: string
+    - createdAt: datetime
+    - status: ConversationStatus
+  }
+
+  class Message {
+    - id: UUID
+    - content: string
+    - attachments: List<Media>
+    - read: boolean
+    - createdAt: datetime
+  }
+
+  class Review {
+    - id: UUID
+    - rating: int
+    - comment: string
+    - moderationStatus: ReviewModerationStatus
+    - createdAt: datetime
+  }
+}
+
+package "Validation fournisseur" <<Validation>> {
+  class SupplierValidationFile {
+    - id: UUID
+    - submittedAt: datetime
+    - validatedAt: datetime?
+    - status: SupplierValidationStatus
+    - comment: string
+  }
+
+  class LegalDocument {
+    - id: UUID
+    - type: LegalDocumentType
+    - file: Media
+    - status: DocumentStatus
+    - uploadedAt: datetime
+  }
+}
+
+' Stubs des classes definies dans 02_identity_roles_class_diagram.puml
+class UserStub <<stub>> {
+}
+
+class BuyerUserStub <<stub>> {
+}
+
+class SupplierUserStub <<stub>> {
+}
+
+hide BuyerUserStub members
+hide SupplierUserStub members
+hide UserStub members
+
+together {
+  Product <|-- FoodProduct
+  Product <|-- NonFoodProduct
+}
+
+together {
+  SupplierCompany "1" -- "0..*" Product : proposes
+  SupplierCompany "1" -- "1..*" SupplierUserStub : hasUsers
+  SupplierCompany "1" -- "1" SupplierValidationFile : validationFile
+  SupplierValidationFile "1" *-- "1..*" LegalDocument : documents
+  SupplierCompany "0..*" -- "0..*" Brand : owns / distributes
+  Brand "1" -- "0..*" Product : groups
+}
+
+together {
+  Category "1" -- "0..*" Product : mainCategory
+  Category "0..1" -- "0..*" Category : parent / children
+}
+
+together {
+  Product "1" *-- "0..*" Lot : lots
+  Product "1" *-- "0..*" PriceTier : priceTiers
+  Product "1" -- "0..*" Review : reviews
+  Product "1" -- "0..*" SponsorshipCampaign : campaigns
+  Product "1" -- "0..*" Media : photos/videos
+}
+
+together {
+  Product "1" -- "1..3" Dimensions : mesures (unite/carton/palette)
+  Product "1" -- "0..*" Certification : certifications
+  Product "1" -- "0..1" ExportCompliance : export
+}
+
+together {
+  BuyerUserStub "1" -- "0..*" RequestForQuotation : creates
+  SupplierCompany "1" -- "0..*" RequestForQuotation : receives
+  RequestForQuotation "1" *-- "1..*" RFQLine : lines
+  RFQLine "0..*" -- "1" Product : product
+}
+
+together {
+  RequestForQuotation "1" -- "0..1" Conversation : discussion
+  Conversation "1" *-- "0..*" Message : messages
+  UserStub "1" -- "0..*" Message : sends
+  UserStub "1" -- "0..*" Review : writes
+}
+
+note right of UserStub
+  Classes definies dans
+  **02_identity_roles_class_diagram.puml**
+end note
+
+note right of FoodProduct
+  Les produits **Food** necessitent une gestion renforcee
+  des ingredients, allergenes, valeurs nutritionnelles,
+  dates de durabilite, conditions de conservation,
+  lots et tracabilite.
+end note
+
+note right of NonFoodProduct
+  Les produits **Non-Food** du perimetre actuel
+  concernent surtout l'hygiene et les produits papier.
+  Les informations importantes concernent la matiere,
+  l'usage, l'emballage, le recyclage et les precautions.
+end note
+
+note right of RFQLine
+  Chaque **RFQLine** conserve un snapshot minimal :
+  nom produit, SKU/GTIN, categorie, conditionnement,
+  quantite demandee et contraintes logistiques.
+end note
+
+legend right
+  |= Notation |= Sens |
+  | `<|--` | Heritage |
+  | `--` | Association |
+  | `*--` | Composition |
+  | `1`, `0..*`, `1..*` | Cardinalites |
+endlegend
+
+@enduml

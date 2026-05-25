@@ -1,0 +1,40 @@
+@startuml
+!include ../common/style.puml
+
+skinparam rectangle {
+  BorderColor #2B6CB0
+  BorderThickness 2
+  BackgroundColor #EBF8FF
+  FontColor #1A365D
+  FontSize 16
+  FontStyle bold
+}
+
+left to right direction
+
+actor "Super Admin" as SuperAdmin #805AD5
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase (Se connecter\navec MFA) as UC_MFA
+  usecase (Gerer\nutilisateurs) as UC_Users
+  usecase (Gerer roles\net permissions) as UC_Roles
+  usecase (Configurer\nsysteme) as UC_System
+  usecase (Consulter\naudit trail) as UC_Audit
+  usecase (Gerer\nsecurite) as UC_Security
+  usecase (Gerer\nsauvegardes) as UC_Backup
+  usecase (Superviser integrations\nexternes) as UC_Integrations
+  usecase (Administrer\nplateforme) as UC_Administer
+}
+
+SuperAdmin --> UC_Administer
+SuperAdmin --> UC_Users
+SuperAdmin --> UC_System
+SuperAdmin --> UC_Security
+SuperAdmin --> UC_Backup
+
+UC_Administer ..> UC_MFA : <<include>>
+UC_Users ..> UC_Roles : <<include>>
+UC_Security ..> UC_Audit : <<include>>
+UC_System ..> UC_Integrations : <<include>>
+
+@enduml

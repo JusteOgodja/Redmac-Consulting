@@ -1,0 +1,229 @@
+@startuml
+!include ../common/style.puml
+
+skinparam package<<Web>> {
+  BackgroundColor #EBF4FF
+  HeaderBackgroundColor #C3DAFE
+  BorderColor #A3BFFA
+}
+
+skinparam package<<Controller>> {
+  BackgroundColor #E8EFFF
+  HeaderBackgroundColor #B3D4FF
+  BorderColor #7F9CF5
+}
+
+skinparam package<<Service>> {
+  BackgroundColor #E6FFFA
+  HeaderBackgroundColor #B2F5EA
+  BorderColor #81E6D9
+}
+
+skinparam package<<Domain>> {
+  BackgroundColor #FAF5FF
+  HeaderBackgroundColor #E9D8FD
+  BorderColor #D6BCFA
+}
+
+skinparam package<<Repository>> {
+  BackgroundColor #F7FAFC
+  HeaderBackgroundColor #E2E8F0
+  BorderColor #CBD5E0
+}
+
+skinparam package<<Infrastructure>> {
+  BackgroundColor #F0F4F8
+  HeaderBackgroundColor #D8E2EE
+  BorderColor #B0C4DE
+}
+
+title Diagramme de classes - Architecture MVC, services et repositories
+left to right direction
+hide empty members
+
+package "Web Layer" <<Web>> {
+  class CatalogPage
+  class ProductPage
+  class RFQPage
+  class SupplierDashboardPage
+  class AdminDashboardPage
+}
+
+package "Controller Layer" <<Controller>> {
+  class CatalogController
+  class ProductController
+  class RFQController
+  class SupplierController
+  class MessageController
+  class AdminController
+}
+
+package "Application Service Layer" <<Service>> {
+  class CatalogService
+  class ProductService
+  class ProductConfigurationService
+  class CategoryAttributeService
+  class ProductComplianceService
+  class ProductMediaService
+  class RFQService
+  class SupplierValidationService
+  class MessagingService
+  class NotificationService
+  class SponsorshipService
+  class ProductImportService
+}
+
+package "Domain Model" <<Domain>> {
+  class Product
+  class FoodProduct
+  class NonFoodProduct
+  class SupplierCompany
+  class User
+  class RequestForQuotation
+  class Conversation
+  class SponsorshipCampaign
+  class ProductCategory
+  class CategoryAttribute
+}
+
+package "Repository Layer" <<Repository>> {
+  interface ProductRepository
+  interface SupplierRepository
+  interface RFQRepository
+  interface MessageRepository
+  interface UserRepository
+  interface SponsorshipRepository
+  interface CategoryRepository
+  interface CategoryAttributeRepository
+  interface ProductAttributeValueRepository
+  interface ProductPackagingRepository
+  interface ProductLotRepository
+}
+
+package "Infrastructure" <<Infrastructure>> {
+  class SqlProductRepository
+  class SqlSupplierRepository
+  class SqlRFQRepository
+  class SqlMessageRepository
+  class SqlUserRepository
+  class SqlSponsorshipRepository
+  class SqlCategoryRepository
+  class SqlCategoryAttributeRepository
+  class SqlProductAttributeValueRepository
+  class SqlProductPackagingRepository
+  class SqlProductLotRepository
+  class CSVParser
+  class MailNotificationGateway
+  class ImageStorageGateway
+  class ProductImageProcessor
+  class ImportTemplateGenerator
+}
+
+' === Web -> Controller ===
+CatalogPage --> CatalogController
+ProductPage --> ProductController
+RFQPage --> RFQController
+SupplierDashboardPage --> SupplierController
+AdminDashboardPage --> AdminController
+
+' === Controller -> Service ===
+' Hidden edges for arrow spacing
+ProductService -[hidden]- ProductImportService
+ProductImportService -[hidden]- ProductConfigurationService
+ProductConfigurationService -[hidden]- ProductMediaService
+SponsorshipService -[hidden]- CatalogService
+
+CatalogController --> CatalogService
+ProductController --> ProductService
+ProductController --> ProductImportService
+ProductController --> ProductConfigurationService
+ProductController --> ProductMediaService
+RFQController --> RFQService
+SupplierController --> SupplierValidationService
+SupplierController --> MessagingService
+MessageController --> MessagingService
+AdminController --> SponsorshipService
+AdminController --> SupplierValidationService
+
+' === Service -> Repository ===
+' Hidden edges for arrow spacing
+ProductRepository -[hidden]- ProductPackagingRepository
+ProductPackagingRepository -[hidden]- ProductLotRepository
+RFQRepository -[hidden]- SupplierRepository
+CategoryRepository -[hidden]- CategoryAttributeRepository
+
+CatalogService --> ProductRepository
+ProductService --> ProductRepository
+ProductService --> ProductPackagingRepository
+ProductService --> ProductLotRepository
+RFQService --> RFQRepository
+RFQService --> ProductRepository
+RFQService --> SupplierRepository
+RFQService --> NotificationService
+SupplierValidationService --> SupplierRepository
+MessagingService --> MessageRepository
+MessagingService --> RFQRepository
+SponsorshipService --> SponsorshipRepository
+
+' === Import related ===
+ProductImportService --> ProductRepository
+ProductImportService --> CSVParser
+ProductImportService --> ProductConfigurationService
+ProductImportService --> CategoryAttributeService
+ProductImportService --> ImportTemplateGenerator
+
+ProductConfigurationService --> CategoryRepository
+ProductConfigurationService --> CategoryAttributeRepository
+
+ProductComplianceService --> ProductRepository
+
+ProductMediaService --> ImageStorageGateway
+ProductMediaService --> ProductImageProcessor
+
+ProductRepository ..> Product
+ProductRepository ..> FoodProduct
+ProductRepository ..> NonFoodProduct
+SupplierRepository ..> SupplierCompany
+RFQRepository ..> RequestForQuotation
+MessageRepository ..> Conversation
+SponsorshipRepository ..> SponsorshipCampaign
+CategoryRepository ..> ProductCategory
+CategoryAttributeRepository ..> CategoryAttribute
+
+SqlProductRepository ..|> ProductRepository
+SqlSupplierRepository ..|> SupplierRepository
+SqlRFQRepository ..|> RFQRepository
+SqlMessageRepository ..|> MessageRepository
+SqlUserRepository ..|> UserRepository
+SqlSponsorshipRepository ..|> SponsorshipRepository
+SqlCategoryRepository ..|> CategoryRepository
+SqlCategoryAttributeRepository ..|> CategoryAttributeRepository
+SqlProductAttributeValueRepository ..|> ProductAttributeValueRepository
+SqlProductPackagingRepository ..|> ProductPackagingRepository
+SqlProductLotRepository ..|> ProductLotRepository
+
+NotificationService --> MailNotificationGateway
+
+note left of CatalogController
+  Les controllers orchestrent l'I/O
+  et ne portent pas la logique metier.
+end note
+
+note bottom of ProductRepository
+  **Dependency Inversion** :
+  les services dependent d'interfaces.
+end note
+
+note bottom of ProductImportService
+  L'import massif s'appuie sur la configuration
+  des categories pour generer et valider les colonnes
+  attendues selon la famille de produits.
+end note
+
+note bottom of ProductMediaService
+  Les images produits, etiquettes, cartons,
+  certificats et fiches techniques sont geres
+  par un service dedie pour ne pas surcharger Product.
+end note
+
+@enduml

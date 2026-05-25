@@ -1,0 +1,257 @@
+@startuml
+!include ../common/style.puml
+
+skinparam package<<Food>> {
+  BackgroundColor #F0FFF4
+  HeaderBackgroundColor #C6F6D5
+  BorderColor #9AE6B4
+}
+
+skinparam package<<NonFood>> {
+  BackgroundColor #EBF8FF
+  HeaderBackgroundColor #BEE3F8
+  BorderColor #90CDF4
+}
+
+title Diagramme de classes - Families de produits FMCG Food / Non-Food
+top to bottom direction
+hide empty members
+
+package "Familles Food" <<Food>> {
+  abstract class FoodProduct {
+    - ingredients: LocalizedText
+    - allergens: List<string>
+    - nutritionFacts: NutritionFacts
+    - shelfLifeDays: int
+    - coldChainRequired: boolean
+    + isPerishable(): boolean
+    + requiresColdChain(): boolean
+  }
+
+  class OilAndFatProduct {
+    - oilType: string
+    - extractionMethod: string
+    - acidityRate: decimal
+    - refined: boolean
+    - organic: boolean
+    - fatComposition: string
+    - packagingMaterial: string
+    - bottleVolume: decimal
+    + isOrganic(): boolean
+    + validateAcidityRate(): ValidationResult
+    + isFoodGrade(): boolean
+  }
+
+  class PreservedFoodProduct {
+    - preservationMethod: string
+    - drainedWeight: decimal
+    - netWeight: decimal
+    - medium: string
+    - canType: string
+    - sterilized: boolean
+    - openingInstructions: LocalizedText
+    + hasDrainedWeight(): boolean
+    + validatePreservationInfo(): ValidationResult
+  }
+
+  class BeverageProduct {
+    - beverageType: string
+    - volume: decimal
+    - sugarContent: decimal
+    - juicePercentage: decimal
+    - carbonated: boolean
+    - concentrateRatio: string
+    - pasteurized: boolean
+    - brixLevel: decimal
+    + isCarbonated(): boolean
+    + calculateDilutionRatio(): decimal
+    + validateBrixLevel(): ValidationResult
+  }
+
+  class DryGroceryProduct {
+    - grainType: string
+    - flourType: string
+    - proteinRate: decimal
+    - humidityRate: decimal
+    - glutenPresence: boolean
+    - format: string
+    - cookingTime: int
+    + requiresCooking(): boolean
+    + validateMoistureRate(): ValidationResult
+    + containsGluten(): boolean
+  }
+
+  class TeaHerbSpiceProduct {
+    - plantType: string
+    - form: string
+    - grade: string
+    - organic: boolean
+    - harvestYear: int
+    - dryingMethod: string
+    - infusionTime: int
+    - aromaProfile: string
+    + isOrganic(): boolean
+    + getRecommendedInfusionTime(): int
+    + validateGrade(): ValidationResult
+  }
+
+  class ConfectionerySnackProduct {
+    - flavor: string
+    - sugarContent: decimal
+    - saltContent: decimal
+    - cocoaPercentage: decimal
+    - fatContent: decimal
+    - texture: string
+    - individuallyWrapped: boolean
+    - targetSegment: string
+    + isHighSugar(): boolean
+    + isHighSalt(): boolean
+    + validateCocoaPercentage(): ValidationResult
+  }
+
+  class DairyProduct {
+    - dairyType: string
+    - milkOrigin: string
+    - fatPercentage: decimal
+    - pasteurizationType: string
+    - uht: boolean
+    - lactoseFree: boolean
+    - cheeseTexture: string
+    - maturationDays: int
+    - storageTemperature: decimal
+    + requiresRefrigeration(): boolean
+    + isUHT(): boolean
+    + validateDairyStorage(): ValidationResult
+  }
+
+  class FrozenFoodProduct {
+    - freezingMethod: string
+    - storageTemperature: decimal
+    - temperatureMin: decimal
+    - temperatureMax: decimal
+    - coldChainRequired: boolean
+    - thawingInstructions: LocalizedText
+    - cookingInstructions: LocalizedText
+    - glazingRate: decimal
+    + requiresColdChain(): boolean
+    + validateFrozenTemperature(): ValidationResult
+    + getColdChainAlert(): string
+  }
+
+  class FreshProduceProduct {
+    - variety: string
+    - caliber: string
+    - grade: string
+    - harvestDate: date
+    - harvestSeason: string
+    - ripenessLevel: string
+    - treatment: string
+    - storageHumidity: decimal
+    - storageTemperature: decimal
+    + isSeasonal(): boolean
+    + getFreshnessStatus(): string
+    + validateCaliber(): ValidationResult
+  }
+
+  class EssentialOilProduct {
+    - botanicalName: string
+    - extractionMethod: string
+    - plantPartUsed: string
+    - purityPercentage: decimal
+    - usageType: string
+    - chemotype: string
+    - safetyWarnings: LocalizedText
+    - foodGrade: boolean
+    + isFoodGrade(): boolean
+    + requiresSafetyWarning(): boolean
+    + validateUsageType(): ValidationResult
+  }
+}
+
+package "Famille Non-Food" <<NonFood>> {
+  abstract class NonFoodProduct {
+    - materialComposition: LocalizedText
+    - recyclable: boolean
+    + requiresSpecialHandling(): boolean
+  }
+
+  class HygienePaperProduct {
+    - paperType: string
+    - plyCount: int
+    - sheetCount: int
+    - rollCount: int
+    - sheetDimensions: Dimensions
+    - grammage: decimal
+    - absorbencyLevel: string
+    - softnessLevel: string
+    - fragranceFree: boolean
+    - dermatologicallyTested: boolean
+    - recycledContentPercentage: decimal
+    - biodegradable: boolean
+    - recyclablePackaging: boolean
+    - color: string
+    - embossed: boolean
+    - intendedUse: string
+    + calculateSheetsPerPack(): int
+    + isEcoFriendly(): boolean
+    + validatePackagingInfo(): ValidationResult
+    + getAbsorbencyCategory(): string
+  }
+}
+
+together {
+  ' Hidden edges for arrow spacing
+  PreservedFoodProduct -[hidden]- OilAndFatProduct
+  DryGroceryProduct -[hidden]- BeverageProduct
+  ConfectionerySnackProduct -[hidden]- TeaHerbSpiceProduct
+  FrozenFoodProduct -[hidden]- DairyProduct
+  FreshProduceProduct -[hidden]- EssentialOilProduct
+
+  FoodProduct <|-- OilAndFatProduct
+  FoodProduct <|-- PreservedFoodProduct
+  FoodProduct <|-- BeverageProduct
+  FoodProduct <|-- DryGroceryProduct
+  FoodProduct <|-- TeaHerbSpiceProduct
+  FoodProduct <|-- ConfectionerySnackProduct
+  FoodProduct <|-- DairyProduct
+  FoodProduct <|-- FrozenFoodProduct
+  FoodProduct <|-- FreshProduceProduct
+  FoodProduct <|-- EssentialOilProduct
+}
+
+NonFoodProduct <|-- HygienePaperProduct
+
+note top of FoodProduct
+  **Categories associees :**
+  Huiles et graisses | Conserves | Boissons
+  Epicerie seche | Thes et epices | Snacks
+  Produits laitiers | Surgele | Fruits frais
+  Huiles essentielles
+end note
+
+note top of NonFoodProduct
+  **Categories associees :**
+  Hygiene et produits papier
+end note
+
+note bottom of EssentialOilProduct
+  Les huiles essentielles sont **ambigues** :
+  elles peuvent etre alimentaires, cosmetiques
+  ou destinees a un usage externe.
+  Le champ **usageType** doit etre obligatoire.
+end note
+
+note right of HygienePaperProduct
+  Cette classe couvre les produits papier d'hygiene :
+  papier hygienique, essuie-tout, mouchoirs,
+  serviettes, lingettes seches, etc.
+end note
+
+note bottom of HygienePaperProduct
+  Si la plateforme ajoute plus tard des savons,
+  gels, detergents, desinfectants ou lingettes humides,
+  il faudra ajouter une classe **ChemicalHygieneProduct**
+  avec SDS, pH, pictogrammes de danger et precautions.
+end note
+
+@enduml

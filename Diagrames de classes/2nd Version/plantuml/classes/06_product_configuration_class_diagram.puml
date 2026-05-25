@@ -1,0 +1,110 @@
+@startuml
+!include ../common/style.puml
+
+skinparam package<<Config>> {
+  BackgroundColor #FAF5FF
+  HeaderBackgroundColor #E9D8FD
+  BorderColor #D6BCFA
+}
+
+skinparam package<<Catalog>> {
+  BackgroundColor #EBF8FF
+  HeaderBackgroundColor #BEE3F8
+  BorderColor #90CDF4
+}
+
+title Diagramme de classes - Configuration dynamique des attributs par categorie
+left to right direction
+hide empty members
+
+package "Configuration" <<Config>> {
+  class ProductCategory {
+    - id: UUID
+    - name: LocalizedText
+    - parent: ProductCategory
+    - productFamily: ProductFamily
+    - isFood: boolean
+    - requiresColdChain: boolean
+    - requiresLotTracking: boolean
+    - requiresNutrition: boolean
+    - requiresAllergenInfo: boolean
+    - requiresSDS: boolean
+  }
+
+  class CategoryAttribute {
+    - id: UUID
+    - category: ProductCategory
+    - name: string
+    - label: LocalizedText
+    - type: AttributeType
+    - unit: string
+    - required: boolean
+    - filterable: boolean
+    - searchable: boolean
+    - comparable: boolean
+    - validationRule: string
+  }
+
+  class ProductAttributeValue {
+    - id: UUID
+    - product: Product
+    - attribute: CategoryAttribute
+    - valueText: string
+    - valueNumber: decimal
+    - valueBoolean: boolean
+    - valueDate: date
+    - valueJson: string
+  }
+
+  class ProductFamily <<Enumeration>> {
+    OIL_AND_FAT
+    PRESERVED_FOOD
+    BEVERAGE
+    DRY_GROCERY
+    TEA_HERB_SPICE
+    CONFECTIONERY_SNACK
+    DAIRY
+    FROZEN_FOOD
+    FRESH_PRODUCE
+    ESSENTIAL_OIL
+    HYGIENE_PAPER
+  }
+}
+
+package "Catalogue" <<Catalog>> {
+  class Product {
+    - id: UUID
+    - sku: string
+    - name: LocalizedText
+    - mainCategory: ProductCategory
+  }
+}
+
+ProductCategory "0..1" -- "0..*" ProductCategory : parent / children
+ProductCategory "1" *-- "0..*" CategoryAttribute : defines
+ProductCategory "1" -- "0..*" Product : classifies
+ProductCategory "1" -- "1" ProductFamily : family
+Product "1" *-- "0..*" ProductAttributeValue : hasValues
+CategoryAttribute "1" -- "0..*" ProductAttributeValue : stores
+
+note right of CategoryAttribute
+  Les attributs specifiques comme **cocoaPercentage**,
+  **glazingRate**, **plyCount**, **brixLevel** ou **acidityRate**
+  sont configures par categorie au lieu d'etre
+  codes directement dans Product.
+end note
+
+note bottom of ProductCategory
+  Cette approche evite une table Product trop lourde
+  et permet d'ajouter de nouvelles categories FMCG
+  **sans modifier** toute la structure de base.
+end note
+
+note right of ProductAttributeValue
+  Stocke la valeur d'un attribut specifique
+  pour un produit donne.
+  Un seul champ est rempli selon le type
+  (text, number, boolean, date, json).
+end note
+
+@enduml

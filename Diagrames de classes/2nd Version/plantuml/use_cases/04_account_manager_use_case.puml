@@ -1,0 +1,48 @@
+@startuml
+!include ../common/style.puml
+
+skinparam rectangle {
+  BorderColor #2B6CB0
+  BorderThickness 2
+  BackgroundColor #EBF8FF
+  FontColor #1A365D
+  FontSize 16
+  FontStyle bold
+}
+
+left to right direction
+
+actor "Account Manager" as AM #805AD5
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase (Se connecter) as UC_Login
+  usecase (Suivre comptes\nfournisseurs) as UC_Suppliers
+  usecase (Suivre comptes\nacheteurs) as UC_Buyers
+  usecase (Valider\nfournisseurs) as UC_ValidateSupplier
+  usecase (Valider\ndocuments legaux) as UC_ValidateDocs
+  usecase (Qualifier\nleads) as UC_Qualify
+  usecase (Suivre opportunites\ncommerciales) as UC_Opportunities
+  usecase (Accompagner\nfournisseurs) as UC_SupportSuppliers
+  usecase (Accompagner\nacheteurs) as UC_SupportBuyers
+  usecase (Consulter statistiques\nglobales) as UC_Analytics
+  usecase (Consulter\nhistorique RFQ) as UC_RFQHistory
+  usecase (Signaler\nanomalies) as UC_Flag
+}
+
+AM --> UC_Login
+AM --> UC_Suppliers
+AM --> UC_Buyers
+AM --> UC_ValidateSupplier
+AM --> UC_Qualify
+AM --> UC_Opportunities
+AM --> UC_Analytics
+
+UC_ValidateSupplier ..> UC_ValidateDocs : <<include>>
+UC_Qualify ..> UC_RFQHistory : <<include>>
+UC_Opportunities ..> UC_Qualify : <<include>>
+
+UC_SupportSuppliers ..> UC_Suppliers : <<extend>>
+UC_SupportBuyers ..> UC_Buyers : <<extend>>
+UC_Flag ..> UC_Analytics : <<extend>>
+
+@enduml
