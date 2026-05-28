@@ -1,0 +1,211 @@
+@startuml
+!include ../common/style.puml
+
+skinparam package<<Import>> {
+  BackgroundColor #FFF5F5
+  HeaderBackgroundColor #FED7D7
+  BorderColor #FEB2B2
+}
+
+skinparam package<<Export>> {
+  BackgroundColor #F0FFF4
+  HeaderBackgroundColor #C6F6D5
+  BorderColor #9AE6B4
+}
+
+skinparam package<<Shared>> {
+  BackgroundColor #FAF5FF
+  HeaderBackgroundColor #E9D8FD
+  BorderColor #D6BCFA
+}
+
+skinparam enum {
+  BorderColor #805AD5
+  BackgroundColor #FAF5FF
+  HeaderBackgroundColor #E9D8FD
+  FontColor #553C9A
+  FontSize 12
+}
+
+title Diagramme de classes - Import massif fournisseur et export massif acheteur
+top to bottom direction
+hide empty members
+
+package "Import fournisseur" <<Import>> {
+  class ProductImportJob {
+    - id: UUID
+    - supplierId: UUID
+    - categoryId: UUID
+    - templateVersion: string
+    - importMode: ImportMode
+    - dryRun: boolean
+    - status: ImportJobStatus
+    - originalFile: Media
+    - validationReportFile: Media
+    - finalReportFile: Media
+    - totalRows: int
+    - validRows: int
+    - invalidRows: int
+    - warningRows: int
+    - createdAt: datetime
+    - completedAt: datetime
+    + canCommit(): boolean
+    + hasErrors(): boolean
+    + getErrorRate(): decimal
+  }
+
+  class ProductImportRow {
+    - id: UUID
+    - rowNumber: int
+    - rawData: JSON
+    - normalizedData: JSON
+    - status: ImportRowStatus
+    - errors: List<string>
+    - warnings: List<string>
+    + isValid(): boolean
+    + hasWarnings(): boolean
+  }
+
+  enum ImportMode {
+    CREATE_ONLY
+    UPDATE_ONLY
+    UPSERT
+  }
+
+  enum ImportJobStatus {
+    DRAFT
+    UPLOADED
+    VALIDATING
+    PARTIALLY_VALID
+    VALID
+    FAILED
+    IMPORTED
+    CANCELLED
+  }
+
+  enum ImportRowStatus {
+    VALID
+    INVALID
+    WARNING
+    IMPORTED
+    SKIPPED
+  }
+}
+
+package "Export acheteur" <<Export>> {
+  class ProductExportJob {
+    - id: UUID
+    - buyerId: UUID
+    - exportType: ProductExportType
+    - filters: JSON
+    - selectedProductIds: List<UUID>
+    - format: ExportFormat
+    - status: ExportJobStatus
+    - totalProducts: int
+    - generatedFile: Media
+    - createdAt: datetime
+    - completedAt: datetime
+    - expiresAt: datetime
+    + isExpired(): boolean
+    + getDownloadUrl(): string
+  }
+
+  class ProductExportLine {
+    - id: UUID
+    - productSnapshot: JSON
+    - selectedQuantity: int
+    - packaging: string
+    - targetCountry: string
+    + getDisplayName(): string
+  }
+
+  enum ProductExportType {
+    CATALOG_EXPORT
+    FAVORITES_EXPORT
+    COMPARISON_EXPORT
+    RFQ_PREPARATION_EXPORT
+  }
+
+  enum ExportFormat {
+    CSV
+    XLSX
+    PDF
+  }
+
+  enum ExportJobStatus {
+    REQUESTED
+    GENERATING
+    READY
+    FAILED
+    EXPIRED
+  }
+}
+
+package "Snapshot partage" <<Shared>> {
+  class ProductSnapshot {
+    - productId: UUID
+    - sku: string
+    - gtin: string
+    - name: string
+    - brandName: string
+    - supplierName: string
+    - categoryName: string
+    - productFamily: string
+    - packagingSummary: string
+    - hsCode: string
+    - countryOfOrigin: string
+    - capturedAt: datetime
+  }
+}
+
+' === Relations Import ===
+SupplierCompany "1" -- "0..*" ProductImportJob : launches
+ProductImportJob "1" *-- "0..*" ProductImportRow : contains
+ProductImportJob "0..1" --> Media : originalFile
+ProductImportJob "0..1" --> Media : validationReport
+ProductImportJob "0..1" --> Media : finalReport
+
+' === Relations Export ===
+BuyerUser "1" -- "0..*" ProductExportJob : requests
+ProductExportJob "1" *-- "1..*" ProductExportLine : contains
+ProductExportJob "0..1" --> Media : generatedFile
+ProductExportLine "0..1" --> Product : sourceProduct
+
+' === Relations Snapshot ===
+ProductExportLine "1" *-- "1" ProductSnapshot : snapshot
+RFQLine "1" *-- "1" ProductSnapshot : snapshot
+
+note right of ProductImportJob
+  L'import massif est traite comme un **job**.
+  Le **dry-run** valide le fichier sans modifier la base.
+  Le **commit** applique uniquement les lignes valides.
+end note
+
+note right of ProductExportJob
+  L'export acheteur est une operation de **lecture**.
+  Il ne modifie pas le catalogue et ne declenche
+  pas de negociation fournisseur.
+end note
+
+note right of ProductSnapshot
+  Le **snapshot** conserve l'etat minimal du produit
+  au moment de l'export ou de la RFQ,
+  meme si la fiche produit evolue ensuite.
+end note
+
+note bottom of ProductExportLine
+  **ProductExportLine** :
+  - sert a generer un fichier de consultation
+  - n'engage pas le fournisseur
+  - ne demande pas de reponse
+  - contient uniquement les champs autorises
+
+  **RFQLine** (diagramme separe) :
+  - fait partie d'une demande de devis
+  - engage un processus commercial
+  - contient quantite demandee, conditionnement,
+    incoterm et commentaire
+  - attend une reponse du fournisseur
+end note
+
+@enduml

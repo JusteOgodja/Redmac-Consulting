@@ -1,0 +1,36 @@
+@startuml
+!include ../common/style.puml
+
+skinparam rectangle {
+  BorderColor #2B6CB0
+  BorderThickness 2
+  BackgroundColor #EBF8FF
+  FontColor #1A365D
+  FontSize 16
+  FontStyle bold
+}
+
+left to right direction
+actor "Visiteur" as Visitor #FF6B6B
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase (Consulter\ncatalogue public) as UC1
+  usecase (Rechercher et\nfiltrer produits) as UC2
+  usecase (Consulter\nfiche produit) as UC3
+  usecase (Voir page\nfournisseur) as UC4
+  usecase (Voir page\nmarque) as UC5
+  usecase (Comparer\nproduits) as UC6
+  usecase (S'inscrire) as UC7
+}
+
+Visitor --> UC1
+Visitor --> UC3
+Visitor --> UC4
+Visitor --> UC5
+Visitor --> UC7
+
+UC2 ..> UC1 : <<extend>>
+UC6 ..> UC3 : <<extend>>
+UC7 ..> UC3 : <<extend>>
+
+@enduml

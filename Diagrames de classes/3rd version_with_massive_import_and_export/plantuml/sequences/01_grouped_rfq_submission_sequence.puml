@@ -1,0 +1,71 @@
+@startuml
+!include ../common/style.puml
+
+skinparam ParticipantOrder 1
+
+actor Acheteur as buyer #FF6B6B
+actor Fournisseur as supplier #4ECDC4
+
+participant "Frontend" as UI #EDF2F7
+participant "RFQController" as Ctrl #B3D4FF
+participant "CreateGroupedRFQUseCase" as UC #B2F5EA
+participant "ProductSnapshotService" as SnapSvc #B2F5EA
+database "ProductRepository" as ProdRepo #81E6D9
+database "SupplierRepository" as SuppRepo #81E6D9
+database "RFQRepository" as RFQRepo #81E6D9
+participant "NotificationService" as Notif #FBD38D
+
+title Diagramme de sequence - Acheteur envoie une RFQ groupee a un fournisseur
+autonumber
+
+buyer -> UI : selectionner plusieurs produits favoris
+buyer -> UI : cliquer sur "Creer RFQ groupee"
+UI -> Ctrl : createGroupedRFQ(request)
+Ctrl -> UC : execute(request)
+UC -> UC : verifier acheteur connecte
+UC -> UC : verifier KYC valide
+
+alt KYC invalide
+  UC --> Ctrl : erreur KYC incomplet
+  Ctrl --> UI : demander finalisation profil
+else KYC valide
+  UC -> ProdRepo : findSelectedProducts(productIds)
+  ProdRepo --> UC : products
+  UC -> SuppRepo : findById(supplierId)
+  SuppRepo --> UC : supplier
+  UC -> UC : verifier meme fournisseur destinataire
+  UC -> UC : verifier chaque produit publiable
+  UC -> UC : verifier disponibilite stock
+  UC -> UC : verifier contraintes MOQ
+  UC -> UC : verifier stockage si surgeles/froid
+
+  alt un produit invalide
+    UC --> Ctrl : erreur de validation produit
+    Ctrl --> UI : afficher erreur de validation
+  else tous les produits valides
+    UC -> UC : creer RequestForQuotation
+    loop pour chaque produit selectionne
+      UC -> SnapSvc : createSnapshot(product)
+      SnapSvc --> UC : productSnapshot
+      UC -> RFQRepo : addRFQLine(snapshot, quantity, packaging, comment)
+    end
+    UC -> RFQRepo : save(rfq)
+    RFQRepo --> UC : rfqSaved
+    UC -> Notif : notifySupplier(rfqSaved)
+    Notif -> supplier : nouvelle RFQ recue
+    UC --> Ctrl : confirmation(rfqId)
+    Ctrl --> UI : creation confirmee
+    UI --> buyer : afficher confirmation RFQ
+  end
+end
+
+note right of UC
+  **Contrairement a l'export acheteur**, la RFQ groupee
+  cree une **demande commerciale** envoyee au fournisseur
+  et attend une **reponse**.
+
+  Chaque RFQLine utilise un **ProductSnapshot** pour
+  figer l'etat du produit au moment de la demande.
+end note
+
+@enduml

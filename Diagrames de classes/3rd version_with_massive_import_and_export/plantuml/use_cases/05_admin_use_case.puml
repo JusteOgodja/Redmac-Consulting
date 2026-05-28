@@ -1,0 +1,68 @@
+@startuml
+!include ../common/style.puml
+
+skinparam rectangle {
+  BorderColor #2B6CB0
+  BorderThickness 2
+  BackgroundColor #EBF8FF
+  FontColor #1A365D
+  FontSize 16
+  FontStyle bold
+}
+
+left to right direction
+
+actor "Admin Plateforme" as Admin #E53E3E
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase (Se connecter) as UC_Login
+  usecase (Gerer\ncatalogue) as UC_Catalog
+  usecase (Gerer\nproduits) as UC_Products
+  usecase (Gerer\nfournisseurs) as UC_Suppliers
+  usecase (Gerer\nmarques) as UC_Brands
+  usecase (Gerer categories\net taxonomie) as UC_Categories
+  usecase (Configurer categories\nproduits) as UC_ConfigCategories
+  usecase (Configurer attributs\npar categorie) as UC_ConfigAttributes
+  usecase (Configurer templates\nd'import) as UC_ImportTemplates
+  usecase (Superviser imports\nfournisseurs) as UC_SuperviseImports
+  usecase (Consulter erreurs\nd'import) as UC_ImportErrors
+  usecase (Valider structure\nFood / Non-Food) as UC_FoodNonFood
+  usecase (Controler qualite des\ndonnees produit) as UC_DataQuality
+  usecase (Configurer regles\nd'export acheteur) as UC_ExportRules
+  usecase (Definir champs\nexportables) as UC_ExportFields
+  usecase (Importer produits\nen masse) as UC_BulkImport
+  usecase (Valider EAN\net anomalies) as UC_EAN
+  usecase (Moderer avis\net contenus) as UC_Content
+  usecase (Gerer campagnes\nsponsoring) as UC_Sponsoring
+  usecase (Consulter\nanalytics) as UC_Analytics
+  usecase (Gerer CMS\neditorial) as UC_CMS
+}
+
+Admin --> UC_Login
+Admin --> UC_Catalog
+Admin --> UC_Suppliers
+Admin --> UC_BulkImport
+Admin --> UC_Content
+Admin --> UC_Sponsoring
+Admin --> UC_CMS
+Admin --> UC_SuperviseImports
+Admin --> UC_ExportRules
+
+UC_Catalog ..> UC_Products : <<include>>
+UC_Catalog ..> UC_Brands : <<include>>
+UC_Catalog ..> UC_Categories : <<include>>
+UC_Catalog ..> UC_ConfigCategories : <<include>>
+UC_BulkImport ..> UC_EAN : <<include>>
+UC_Sponsoring ..> UC_Analytics : <<include>>
+
+UC_ConfigAttributes ..> UC_ConfigCategories : <<include>>
+UC_ImportTemplates ..> UC_ConfigAttributes : <<include>>
+UC_ImportTemplates ..> UC_ConfigCategories : <<include>>
+UC_SuperviseImports ..> UC_ImportErrors : <<include>>
+UC_ExportRules ..> UC_ExportFields : <<include>>
+
+UC_DataQuality ..> UC_FoodNonFood : <<extend>>
+UC_DataQuality ..> UC_SuperviseImports : <<extend>>
+UC_Content ..> UC_Catalog : <<extend>>
+
+@enduml

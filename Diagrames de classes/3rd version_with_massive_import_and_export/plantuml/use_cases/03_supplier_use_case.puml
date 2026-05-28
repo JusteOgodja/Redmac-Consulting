@@ -1,0 +1,82 @@
+@startuml
+!include ../common/style.puml
+
+skinparam rectangle {
+  BorderColor #2B6CB0
+  BorderThickness 2
+  BackgroundColor #EBF8FF
+  FontColor #1A365D
+  FontSize 16
+  FontStyle bold
+}
+
+left to right direction
+
+actor Fournisseur #4ECDC4
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase (S'inscrire\nfournisseur) as UC_Register
+  usecase (Se connecter) as UC_Login
+  usecase (Completer\nfiche societe) as UC_Profile
+  usecase (Soumettre\ndocuments legaux) as UC_LegalDocs
+  usecase (Gerer\nproduits) as UC_ManageProducts
+  usecase (Creer\nproduit) as UC_CreateProduct
+  usecase (Modifier\nproduit) as UC_UpdateProduct
+  usecase (Importer produits\nen masse) as UC_BulkImport
+  usecase (Telecharger template\nd'import produit) as UC_Template
+  usecase (Tester fichier\nd'import) as UC_DryRun
+  usecase (Corriger erreurs\nd'import) as UC_FixErrors
+  usecase (Confirmer\nimport) as UC_Commit
+  usecase (Consulter rapport\nd'import) as UC_Report
+  usecase (Gerer caracteristiques\nproduit) as UC_Characteristics
+  usecase (Ajouter images\nproduit) as UC_Images
+  usecase (Importer images\nproduit par ZIP) as UC_ZIPImages
+  usecase (Gerer lots\net dates) as UC_Lots
+  usecase (Gerer\nconditionnement) as UC_Packaging
+  usecase (Mettre a jour\nstocks) as UC_Stocks
+  usecase (Gerer grilles\ntarifaires) as UC_Pricing
+  usecase (Gerer stocks\npar import) as UC_ImportStocks
+  usecase (Gerer prix\npar import) as UC_ImportPricing
+  usecase (Consulter\nRFQ recues) as UC_ViewRFQ
+  usecase (Repondre\nRFQ) as UC_ReplyRFQ
+  usecase (Envoyer\nmessage) as UC_Message
+  usecase (Consulter statistiques\nfournisseur) as UC_Stats
+  usecase (Acheter\nsponsoring) as UC_Sponsoring
+}
+
+Fournisseur --> UC_Register
+Fournisseur --> UC_Profile
+Fournisseur --> UC_ManageProducts
+Fournisseur --> UC_BulkImport
+Fournisseur --> UC_ViewRFQ
+Fournisseur --> UC_Stats
+
+UC_Register ..> UC_LegalDocs : <<include>>
+UC_ManageProducts ..> UC_Login : <<include>>
+UC_CreateProduct ..> UC_ManageProducts : <<include>>
+UC_UpdateProduct ..> UC_ManageProducts : <<include>>
+
+UC_BulkImport ..> UC_ManageProducts : <<include>>
+UC_BulkImport ..> UC_Template : <<include>>
+UC_BulkImport ..> UC_DryRun : <<include>>
+UC_Commit ..> UC_DryRun : <<include>>
+UC_Stocks ..> UC_ManageProducts : <<include>>
+UC_Pricing ..> UC_ManageProducts : <<include>>
+UC_ReplyRFQ ..> UC_ViewRFQ : <<include>>
+UC_Lots ..> UC_ManageProducts : <<include>>
+UC_Packaging ..> UC_ManageProducts : <<include>>
+UC_ZIPImages ..> UC_Images : <<include>>
+
+UC_Images ..> UC_ManageProducts : <<extend>>
+UC_FixErrors ..> UC_Report : <<extend>>
+UC_ImportStocks ..> UC_BulkImport : <<extend>>
+UC_ImportPricing ..> UC_BulkImport : <<extend>>
+UC_Message ..> UC_ReplyRFQ : <<extend>>
+UC_Sponsoring ..> UC_Stats : <<extend>>
+
+note right of UC_DryRun
+  Le **dry-run** permet de verifier le fichier
+  **sans modifier** reellement le catalogue.
+end note
+
+@enduml

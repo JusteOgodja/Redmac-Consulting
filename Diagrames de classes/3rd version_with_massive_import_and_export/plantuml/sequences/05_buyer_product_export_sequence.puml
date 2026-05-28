@@ -1,0 +1,71 @@
+@startuml
+!include ../common/style.puml
+
+actor Acheteur as buyer #FF6B6B
+
+participant "BuyerFrontend" as Front #EDF2F7
+participant "ProductExportController" as Ctrl #B3D4FF
+participant "ProductExportService" as Svc #B2F5EA
+participant "ProductSearchService" as Search #81E6D9
+participant "ProductAuthorizationService" as Auth #FBD38D
+participant "ProductSnapshotService" as Snap #B2F5EA
+participant "ExportFileGenerator" as Gen #E2E8F0
+participant "FileStorageGateway" as Storage #CBD5E0
+participant "NotificationService" as Notif #FBD38D
+
+title Diagramme de sequence - Export massif d'une selection de produits par l'acheteur
+autonumber
+
+buyer -> Front : selectionnerProduitsOuFiltres()
+buyer -> Front : exporterSelection(format)
+Front -> Ctrl : requestExport(filters, selectedProductIds, format)
+Ctrl -> Svc : createExportJob(request)
+
+alt format invalide
+  Svc --> Ctrl : error("format non supporte")
+  Ctrl --> Front : afficherErreurFormat()
+else selection vide
+  Svc --> Ctrl : error("selection vide")
+  Ctrl --> Front : afficherErreurSelectionVide()
+else trop de produits
+  Svc --> Ctrl : exportAsync(products, format)
+  Ctrl --> Front : exportEnCours()
+end
+
+Svc -> Search : getProducts(filters, selectedProductIds)
+Search --> Svc : products
+
+Svc -> Auth : filterAllowedFields(buyer, products)
+Auth --> Svc : authorizedProductViews
+
+alt acces non autorise pour certains champs
+  Svc -> Svc : masquerChampsSensibles()
+end
+
+Svc -> Snap : createSnapshots(authorizedProductViews)
+Snap --> Svc : productSnapshots
+
+Svc -> Gen : generate(productSnapshots, format)
+
+alt erreur generation fichier
+  Gen --> Svc : generationError
+  Svc --> Ctrl : error("erreur generation fichier")
+  Ctrl --> Front : afficherErreurGeneration()
+else generation reussie
+  Gen --> Svc : exportFile
+  Svc -> Storage : store(exportFile)
+  Storage --> Svc : downloadUrl
+  Svc -> Notif : notifyBuyer(downloadUrl)
+  Notif --> buyer : export pret
+  Svc --> Ctrl : exportJobCreated(downloadUrl)
+  Ctrl --> Front : afficherLienTelechargement(downloadUrl)
+  Front --> buyer : telechargerFichier()
+end
+
+note right of Svc
+  L'export acheteur **ne cree pas de RFQ**.
+  Il sert uniquement a telecharger une selection
+  pour analyse, comparaison ou partage interne.
+end note
+
+@enduml

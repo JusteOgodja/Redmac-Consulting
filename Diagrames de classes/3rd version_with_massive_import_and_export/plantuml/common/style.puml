@@ -1,0 +1,243 @@
+' ========================================
+' Palette de couleurs
+' ========================================
+!define C_PRIMARY #2B6CB0
+!define C_PRIMARY_LIGHT #EBF8FF
+!define C_PRIMARY_DARK #1A365D
+!define C_TEAL #319795
+!define C_TEAL_LIGHT #E6FFFA
+!define C_PURPLE #805AD5
+!define C_PURPLE_LIGHT #FAF5FF
+!define C_GREEN #38A169
+!define C_GREEN_LIGHT #F0FFF4
+!define C_ORANGE #DD6B20
+!define C_ORANGE_LIGHT #FFFAF0
+!define C_RED #E53E3E
+!define C_RED_LIGHT #FFF5F5
+!define C_AMBER #D69E2E
+!define C_AMBER_LIGHT #FFFFF0
+!define C_GRAY #718096
+!define C_GRAY_LIGHT #F7FAFC
+!define C_DARK #2D3748
+!define C_BORDER #CBD5E0
+!define C_TEXT_SECONDARY #4A5568
+!define C_WHITE #FFFFFF
+
+' ========================================
+' Parametres generaux
+' ========================================
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam dpi 150
+skinparam roundcorner 10
+skinparam shadowing false
+skinparam linetype ortho
+skinparam monochrome false
+
+' ========================================
+' Titre
+' ========================================
+skinparam Title {
+  FontSize 18
+  FontStyle bold
+  FontColor C_PRIMARY_DARK
+  BorderColor C_BORDER
+  BackgroundColor C_PRIMARY_LIGHT
+}
+
+' ========================================
+' Fleches
+' ========================================
+skinparam Arrow {
+  Color C_PRIMARY
+  Thickness 1.5
+  FontSize 10
+  FontColor C_TEXT_SECONDARY
+}
+
+' ========================================
+' Classes
+' ========================================
+skinparam Class {
+  BorderColor C_PRIMARY
+  BorderThickness 1.5
+  BackgroundColor C_WHITE
+  HeaderBackgroundColor C_PRIMARY_LIGHT
+  FontColor C_DARK
+  FontSize 13
+  AttributeFontSize 10
+  AttributeFontColor C_TEXT_SECONDARY
+}
+
+' ========================================
+' Classes abstraites
+' ========================================
+skinparam AbstractClass {
+  BorderColor C_PURPLE
+  BorderThickness 2
+  BackgroundColor C_PURPLE_LIGHT
+  HeaderBackgroundColor #E9D8FD
+  FontColor #553C9A
+  FontSize 13
+  AttributeFontSize 10
+  AttributeFontColor #6B46C1
+}
+
+skinparam Interface {
+  BorderColor #3182CE
+  BorderThickness 2
+  BackgroundColor #EBF8FF
+  HeaderBackgroundColor #BEE3F8
+  FontColor #2B6CB0
+  FontSize 13
+  FontStyle italic
+  AttributeFontSize 10
+}
+
+' ========================================
+' Interfaces
+' ========================================
+skinparam Interface {
+  BorderColor #3182CE
+  BorderThickness 2.5
+  BackgroundColor #EBF8FF
+  HeaderBackgroundColor #BEE3F8
+  FontColor #2B6CB0
+  FontSize 14
+  FontStyle italic
+  AttributeFontSize 11
+}
+
+' ========================================
+' Packages
+' ========================================
+skinparam package {
+  BorderColor C_BORDER
+  BorderThickness 1.5
+  BackgroundColor C_GRAY_LIGHT
+  HeaderBackgroundColor #E2E8F0
+  FontColor C_DARK
+  FontSize 13
+  FontStyle bold
+}
+
+' ========================================
+' Acteurs
+' ========================================
+skinparam Actor {
+  BorderColor C_PRIMARY
+  BackgroundColor C_PRIMARY_LIGHT
+  FontColor C_PRIMARY_DARK
+  FontSize 13
+  FontStyle bold
+}
+
+skinparam UseCase {
+  BorderColor C_TEAL
+  BackgroundColor C_WHITE
+  FontColor C_DARK
+  FontSize 11
+}
+
+skinparam Participant {
+  BorderColor C_PRIMARY
+  BackgroundColor C_WHITE
+  FontColor C_DARK
+  FontSize 11
+  FontStyle bold
+}
+
+' ========================================
+' Cas d'usage
+' ========================================
+skinparam UseCase {
+  BorderColor C_TEAL
+  BackgroundColor C_WHITE
+  FontColor C_DARK
+  FontSize 12
+}
+
+' ========================================
+' Sequence - Participants
+' ========================================
+skinparam Participant {
+  BorderColor C_PRIMARY
+  BackgroundColor C_WHITE
+  FontColor C_DARK
+  FontSize 12
+  FontStyle bold
+}
+
+skinparam SequenceLifeLineBorderColor C_PRIMARY
+skinparam SequenceLifeLineBackgroundColor C_PRIMARY_LIGHT
+
+' ========================================
+' Sequence - Boites (alt, loop, etc.)
+' ========================================
+skinparam SequenceBoxBorderColor C_BORDER
+skinparam SequenceBoxBackgroundColor C_GRAY_LIGHT
+skinparam SequenceBoxFontColor C_DARK
+skinparam SequenceBoxFontSize 11
+
+skinparam SequenceDividerBackgroundColor C_PRIMARY_LIGHT
+skinparam SequenceDividerFontColor C_PRIMARY_DARK
+skinparam SequenceDividerFontSize 12
+skinparam SequenceDividerFontStyle bold
+
+skinparam SequenceGroupBackgroundColor C_GRAY_LIGHT
+skinparam SequenceGroupBorderColor C_BORDER
+skinparam SequenceGroupFontColor C_DARK
+skinparam SequenceGroupFontSize 10
+skinparam SequenceGroupFontStyle bold
+
+' ========================================
+' Notes
+' ========================================
+skinparam Note {
+  BackgroundColor C_AMBER_LIGHT
+  BorderColor C_AMBER
+  FontColor #744210
+  FontSize 10
+}
+
+' ========================================
+' Legendes
+' ========================================
+skinparam Legend {
+  BorderColor C_BORDER
+  BackgroundColor #F8FCFC
+  FontSize 10
+  FontColor C_DARK
+}
+
+' ========================================
+' Bases de donnees
+' ========================================
+skinparam Database {
+  BorderColor C_TEAL
+  BackgroundColor C_TEAL_LIGHT
+  FontColor C_DARK
+  FontSize 11
+  FontStyle bold
+}
+
+skinparam Class<<stub>> {
+  BorderColor #A0AEC0
+  BorderThickness 1
+  BorderStyle dashed
+  BackgroundColor #F7FAFC
+  HeaderBackgroundColor #EDF2F7
+  FontColor #718096
+  FontSize 11
+  FontStyle italic
+}
+
+' ========================================
+' Queue / Collections
+' ========================================
+skinparam Queue {
+  BorderColor C_ORANGE
+  BackgroundColor C_ORANGE_LIGHT
+  FontColor C_DARK
+  FontSize 12
+}

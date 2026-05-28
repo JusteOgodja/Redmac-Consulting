@@ -1,0 +1,189 @@
+@startuml
+!include ../common/style.puml
+
+skinparam package<<Core>> {
+  BackgroundColor #EBF8FF
+  HeaderBackgroundColor #BEE3F8
+  BorderColor #90CDF4
+}
+
+skinparam package<<Config>> {
+  BackgroundColor #FAF5FF
+  HeaderBackgroundColor #E9D8FD
+  BorderColor #D6BCFA
+}
+
+skinparam package<<Value>> {
+  BackgroundColor #F0FFF4
+  HeaderBackgroundColor #C6F6D5
+  BorderColor #9AE6B4
+}
+
+title Diagramme de classes - Detail catalogue, conditionnement et lots
+left to right direction
+hide empty members
+
+package "Produit" <<Core>> {
+  class Product {
+    - id: UUID
+    - sku: string
+    - gtin: string
+    - ean13: string
+    - name: LocalizedText
+    - description: LocalizedText
+    - hsCode: string
+    - minimumOrderQuantity: int
+    - stockTotal: int
+    - salesUnit: string
+    - packagingUnit: string
+  }
+
+  class SupplierCompany {
+    - id: UUID
+    - companyName: string
+  }
+
+  class Media {
+    - id: UUID
+    - url: string
+    - type: MediaType
+    - altText: string
+  }
+
+  class Certification {
+    - id: UUID
+    - name: string
+    - issuer: string
+    - expirationDate: date?
+  }
+}
+
+package "Conditionnement et lots" <<Config>> {
+  class ProductPackaging {
+    - id: UUID
+    - product: Product
+    - unitType: string
+    - netContent: decimal
+    - netContentUnit: string
+    - unitsPerCarton: int
+    - cartonsPerLayer: int
+    - layersPerPallet: int
+    - cartonsPerPallet: int
+    - packagingMaterial: string
+    + calculateCartonsPerPallet(): int
+    + getTotalUnitsPerPallet(): int
+  }
+
+  class ProductLot {
+    - id: UUID
+    - product: Product
+    - lotNumber: string
+    - productionDate: date
+    - bestBeforeDate: date
+    - useByDate: date
+    - quantityAvailable: int
+    - warehouse: string
+    - status: LotStatus
+    + isExpired(referenceDate: date): boolean
+    + getDaysUntilExpiry(referenceDate: date): int
+    + getAvailableQuantity(): int
+  }
+}
+
+package "Objets valeur" <<Value>> {
+  class LocalizedText {
+    - fr: string
+    - en: string
+    - ar: string
+  }
+
+  class NutritionFacts {
+    - energyKJ: decimal
+    - energyKcal: decimal
+    - fat: decimal
+    - saturatedFat: decimal
+    - carbohydrate: decimal
+    - sugars: decimal
+    - protein: decimal
+    - salt: decimal
+  }
+
+  class StorageCondition {
+    - storageType: string
+    - temperatureMin: decimal
+    - temperatureMax: decimal
+    - humidityMin: decimal
+    - humidityMax: decimal
+    - coldChainRequired: boolean
+  }
+
+  class ExportCompliance {
+    - hsCode: string
+    - countryOfOrigin: string
+    - exportAllowedCountries: List<string>
+    - requiredCertificates: List<Certification>
+    - incotermsAvailable: List<string>
+    - customsNotes: LocalizedText
+  }
+
+  class Dimensions {
+    - length: decimal
+    - width: decimal
+    - height: decimal
+    - grossWeight: decimal
+    - netWeight: decimal
+    - volume: decimal
+  }
+
+  class Palletization {
+    - cartonsPerLayer: int
+    - layersPerPallet: int
+    - cartonsPerPallet: int
+  }
+}
+
+together {
+  Product "1" *-- "1..*" ProductPackaging : packaging
+  Product "1" *-- "0..*" ProductLot : lots
+  Product "1" *-- "0..1" NutritionFacts : nutrition
+  Product "1" *-- "0..1" StorageCondition : storage
+  Product "1" *-- "0..1" ExportCompliance : export
+  Product "1" -- "0..*" Media : medias
+  Product "0..*" -- "0..*" Certification : certifs
+}
+
+together {
+  Product "1" -- "1..3" Dimensions : mesures (unite/carton/palette)
+  Product "1" -- "0..1" Palletization : palletisation
+}
+
+together {
+  SupplierCompany "0..*" -- "0..*" Certification : certifs
+}
+
+note right of ProductPackaging
+  **Conditionnement multiple :**
+  unite, carton, palette.
+  Permet de gerer les equivalents
+  pour les envois export.
+end note
+
+note right of ProductLot
+  **Lot trace** avec DLC/DDM.
+  Pour les produits Food, la gestion
+  des lots et des dates est obligatoire.
+  Pour Non-Food, recommandee.
+end note
+
+note bottom of NutritionFacts
+  **Obligatoire** pour les produits Food.
+  Non applicable aux produits Non-Food.
+end note
+
+note bottom of StorageCondition
+  **Fondamental** pour les produits
+  sensibles a la temperature
+  (surgeles, frais, laitiers).
+end note
+
+@enduml

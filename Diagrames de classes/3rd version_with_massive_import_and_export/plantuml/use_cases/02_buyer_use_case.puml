@@ -1,0 +1,83 @@
+@startuml
+!include ../common/style.puml
+
+skinparam rectangle {
+  BorderColor #2B6CB0
+  BorderThickness 2
+  BackgroundColor #EBF8FF
+  FontColor #1A365D
+  FontSize 16
+  FontStyle bold
+}
+
+left to right direction
+
+actor "Client B2B / Acheteur" as Buyer #FF6B6B
+
+rectangle "Plateforme B2B FMCG Export" {
+  usecase (Se connecter) as UC_Login
+  usecase (Gerer profil\net KYC) as UC_KYC
+  usecase (Consulter\ncatalogue) as UC_Catalog
+  usecase (Rechercher et\nfiltrer produits) as UC_Search
+  usecase (Consulter\nfiche produit) as UC_Product
+  usecase (Selectionner\nproduits) as UC_Select
+  usecase (Ajouter aux\nfavoris) as UC_Favorite
+  usecase (Comparer\nproduits) as UC_Compare
+  usecase (Creer RFQ\ngroupee) as UC_RFQ
+  usecase (Renseigner\nquantites) as UC_Quantity
+  usecase (Exporter selection\nproduits) as UC_Export
+  usecase (Exporter\nfavoris) as UC_ExportFav
+  usecase (Exporter comparaison\nproduits) as UC_ExportComp
+  usecase (Telecharger catalogue\npersonnalise) as UC_ExportCatalog
+  usecase (Demander\nechantillon) as UC_Sample
+  usecase (Consulter\nhistorique RFQ) as UC_History
+  usecase (Consulter\ndevis recu) as UC_Quote
+  usecase (Envoyer\nmessage) as UC_Message
+  usecase (Negocier\ndeviss) as UC_Negotiate
+  usecase (Accepter\ndeviss) as UC_Accept
+  usecase (Refuser\ndeviss) as UC_Reject
+  usecase (Laisser\navis) as UC_Review
+}
+
+Buyer --> UC_Catalog
+Buyer --> UC_Search
+Buyer --> UC_Product
+Buyer --> UC_RFQ
+Buyer --> UC_Export
+Buyer --> UC_Sample
+Buyer --> UC_History
+Buyer --> UC_Quote
+
+UC_RFQ ..> UC_Login : <<include>>
+UC_RFQ ..> UC_Select : <<include>>
+UC_RFQ ..> UC_Quantity : <<include>>
+UC_RFQ ..> UC_KYC : <<include>>
+UC_Sample ..> UC_Login : <<include>>
+UC_Quote ..> UC_Login : <<include>>
+
+UC_Export ..> UC_Login : <<include>>
+UC_Export ..> UC_Select : <<include>>
+UC_ExportFav ..> UC_Export : <<include>>
+UC_ExportComp ..> UC_Export : <<include>>
+UC_ExportCatalog ..> UC_Export : <<include>>
+
+UC_Favorite ..> UC_Product : <<extend>>
+UC_Compare ..> UC_Product : <<extend>>
+UC_Message ..> UC_Quote : <<extend>>
+UC_Negotiate ..> UC_Quote : <<extend>>
+UC_Accept ..> UC_Quote : <<extend>>
+UC_Reject ..> UC_Quote : <<extend>>
+UC_Review ..> UC_Product : <<extend>>
+
+note right of UC_Export
+  **Export** = telechargement d'un fichier
+  pour analyse ou partage interne.
+  **Ne cree pas** de demande commerciale.
+end note
+
+note right of UC_RFQ
+  **RFQ** = demande officielle de devis
+  envoyee a un fournisseur avec reponse attendue.
+end note
+
+@enduml

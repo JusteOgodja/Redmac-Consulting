@@ -1,0 +1,154 @@
+@startuml
+!include ../common/style.puml
+
+actor Fournisseur as supplier #4ECDC4
+
+participant "SupplierBackoffice" as Back #EDF2F7
+participant "ProductController" as Ctrl #B3D4FF
+participant "ProductImportService" as ImportSvc #B2F5EA
+participant "ProductConfigurationService" as ConfigSvc #81E6D9
+participant "ImportTemplateGenerator" as Template #FBD38D
+participant "ProductImportJobRepository" as JobRepo #81E6D9
+participant "CSVParser" as Parser #E2E8F0
+participant "ProductValidator" as Validator #FBD38D
+database "ProductRepository" as Repo #81E6D9
+participant "ProductMediaService" as MediaSvc #B2F5EA
+participant "ImportReportService" as Report #FBD38D
+participant "FileStorageGateway" as Storage #CBD5E0
+
+title Diagramme de sequence - Import massif de produits avec workflow complet
+autonumber
+
+== Generation du template ==
+
+supplier -> Back : choisirCategorie(categoryId)
+Back -> Ctrl : requestImportTemplate(categoryId)
+Ctrl -> ImportSvc : generateTemplate(categoryId)
+ImportSvc -> ConfigSvc : getCategoryConfiguration(categoryId)
+ConfigSvc --> ImportSvc : requiredAttributes, optionalAttributes
+ImportSvc -> Template : generateTemplate(categoryConfiguration)
+Template --> ImportSvc : templateFile
+ImportSvc -> Storage : store(templateFile)
+Storage --> ImportSvc : downloadUrl
+ImportSvc --> Ctrl : downloadUrl
+Ctrl --> Back : afficherLienTemplate(downloadUrl)
+Back --> supplier : telecharger template
+
+== Upload et dry-run ==
+
+supplier -> Back : uploadImportFile(file, importMode)
+Back -> Ctrl : uploadImportFile(file, categoryId, importMode)
+Ctrl -> ImportSvc : createDryRunImport(file, categoryId, importMode)
+ImportSvc -> JobRepo : createJob(status=VALIDATING, dryRun=true)
+JobRepo --> ImportSvc : jobId
+
+ImportSvc -> Parser : parse(file)
+Parser --> ImportSvc : rows
+
+alt fichier invalide
+  ImportSvc --> Ctrl : error("fichier non parseable")
+  Ctrl --> Back : afficherErreurFichier()
+else categorie inconnue
+  ImportSvc --> Ctrl : error("categorie inconnue")
+  Ctrl --> Back : afficherErreurCategorie()
+else template version incompatible
+  ImportSvc --> Ctrl : error("template obsolete")
+  Ctrl --> Back : demanderRegenerationTemplate()
+else parse OK
+  ImportSvc -> ImportSvc : initialiserRapport()
+
+  loop pour chaque ligne
+    ImportSvc -> ConfigSvc : getExpectedAttributes(row.categoryId)
+    ConfigSvc --> ImportSvc : expectedAttributes
+    ImportSvc -> Validator : validateCommonFields(row)
+
+    alt produit Food
+      ImportSvc -> Validator : validateFoodFields(row)
+    else produit Non-Food
+      ImportSvc -> Validator : validateNonFoodFields(row)
+    end
+
+    ImportSvc -> Validator : validateCategoryAttributes(row, expectedAttributes)
+
+    alt images fournies
+      ImportSvc -> MediaSvc : validateMediaReferences(row)
+      MediaSvc --> ImportSvc : mediaValidated
+
+      alt image manquante ou URL invalide
+        ImportSvc -> JobRepo : saveRowStatus(WARNING, "image manquante")
+      else images valides
+      end
+    end
+
+    alt ligne valide
+      ImportSvc -> JobRepo : saveRowStatus(VALID)
+    else ligne invalide
+      ImportSvc -> JobRepo : saveRowStatus(INVALID, errors)
+    end
+  end
+
+  alt trop d'erreurs
+    ImportSvc -> JobRepo : updateJobStatus(FAILED, "trop d'erreurs")
+  end
+
+  ImportSvc -> Report : generateValidationReport(jobId)
+  Report --> ImportSvc : reportFile
+  ImportSvc -> Storage : store(reportFile)
+  Storage --> ImportSvc : reportUrl
+  ImportSvc --> Ctrl : dryRunResult(reportUrl, stats)
+  Ctrl --> Back : afficherRapportValidation()
+  Back --> supplier : consulter erreurs
+end
+
+alt droits fournisseur insuffisants
+  ImportSvc --> Ctrl : error("droits insuffisants")
+  Ctrl --> Back : afficherErreurDroits()
+end
+
+== Confirmation et application ==
+
+supplier -> Back : confirmerImport(jobId)
+Back -> Ctrl : commitImport(jobId)
+Ctrl -> ImportSvc : commitImport(jobId)
+
+alt dry-run avait trop d'erreurs
+  ImportSvc --> Ctrl : error("trop d'erreurs pour commit")
+  Ctrl --> Back : afficherErreurCommit()
+else commit autorise
+  ImportSvc -> JobRepo : getValidRows(jobId)
+  JobRepo --> ImportSvc : validRows
+
+  loop pour chaque ligne valide
+    alt importMode = CREATE_ONLY
+      ImportSvc -> Repo : createProduct(row.normalizedData)
+    else importMode = UPDATE_ONLY
+      ImportSvc -> Repo : updateProduct(row.normalizedData)
+    else importMode = UPSERT
+      ImportSvc -> Repo : upsertProduct(row.normalizedData)
+    end
+
+    alt images fournies
+      ImportSvc -> MediaSvc : attachMedia(productId, mediaReferences)
+      MediaSvc --> ImportSvc : mediaAttached
+    end
+  end
+
+  ImportSvc -> JobRepo : updateJobStatus(IMPORTED)
+  ImportSvc -> Report : generateFinalReport(jobId)
+  Report --> ImportSvc : finalReport
+  ImportSvc -> Storage : store(finalReport)
+  Storage --> ImportSvc : finalReportUrl
+  ImportSvc --> Ctrl : finalReportUrl
+  Ctrl --> Back : afficherRapportFinal(finalReportUrl)
+  Back --> supplier : rapport final recu
+end
+
+note right of ImportSvc
+  L'import massif distingue :
+  - **dry-run** : validation sans modification de la base
+  - **commit** : application reelle des creations/mises a jour
+  Les **ImportMode** (CREATE_ONLY / UPDATE_ONLY / UPSERT)
+  controlent le comportement pour chaque ligne valide.
+end note
+
+@enduml

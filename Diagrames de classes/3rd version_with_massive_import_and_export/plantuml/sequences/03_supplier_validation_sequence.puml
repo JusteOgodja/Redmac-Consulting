@@ -1,0 +1,41 @@
+@startuml
+!include ../common/style.puml
+
+actor AccountManager as AM #805AD5
+actor Fournisseur as supplier #4ECDC4
+
+participant "AdminBackoffice" as Back #EDF2F7
+participant "SupplierValidationController" as Ctrl #B3D4FF
+participant "SupplierValidationService" as Svc #B2F5EA
+participant "DocumentService" as Docs #FBD38D
+database "SupplierRepository" as Repo #81E6D9
+participant "NotificationService" as Notif #FBD38D
+
+title Diagramme de sequence - Validation fournisseur
+autonumber
+
+AM -> Back : ouvrir fournisseur en attente
+Back -> Ctrl : reviewSupplier(supplierId)
+Ctrl -> Svc : loadValidationFile(supplierId)
+Svc -> Repo : findValidationFile(supplierId)
+Repo --> Svc : validation file
+Svc -> Docs : verifyDocuments(validationFile)
+Docs --> Svc : verificationResult
+
+alt documents valides
+  Svc -> Repo : updateValidationStatus(supplierId, VALIDATED)
+  Repo --> Svc : supplier updated
+  Svc -> Notif : notifySupplierValidated(supplierId)
+  Notif -> supplier : fournisseur valide
+  Svc --> Ctrl : validation success
+  Ctrl --> Back : afficher resultat valide
+else documents manquants ou rejetes
+  Svc -> Repo : updateValidationStatus(supplierId, REJECTED)
+  Repo --> Svc : supplier updated
+  Svc -> Notif : notifySupplierRejected(supplierId, reasons)
+  Notif -> supplier : documents a completer
+  Svc --> Ctrl : validation rejected
+  Ctrl --> Back : afficher resultat rejete
+end
+
+@enduml
